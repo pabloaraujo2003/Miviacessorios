@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface": "#2b3437",
+              "error-dim": "#4e0309",
+              "surface-dim": "#d1dce0",
+              "on-error-container": "#752121",
+              "surface-container": "#eaeff1",
+              "outline": "#737c7f",
+              "primary": "#5f5e5e",
+              "on-background": "#2b3437",
+              "tertiary": "#5b5f65",
+              "on-tertiary-container": "#575c61",
+              "on-tertiary-fixed": "#454a4f",
+              "background": "#f8f9fa",
+              "on-surface-variant": "#586064",
+              "tertiary-fixed-dim": "#e2e6ec",
+              "on-primary-fixed-variant": "#5c5b5b",
+              "secondary-dim": "#505358",
+              "surface-container-low": "#f1f4f6",
+              "on-secondary-container": "#4f5256",
+              "inverse-surface": "#0c0f10",
+              "surface-container-high": "#e2e9ec",
+              "tertiary-fixed": "#f0f4fa",
+              "surface-bright": "#f8f9fa",
+              "secondary": "#5c5f64",
+              "on-tertiary-fixed-variant": "#62676c",
+              "primary-dim": "#535252",
+              "on-primary-container": "#525151",
+              "on-tertiary": "#f6f9ff",
+              "error": "#9f403d",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#faf7f6",
+              "on-primary-fixed": "#403f3f",
+              "on-secondary": "#f7f9fe",
+              "primary-container": "#e5e2e1",
+              "secondary-fixed": "#e0e2e8",
+              "secondary-fixed-dim": "#d2d4da",
+              "surface-tint": "#5f5e5e",
+              "primary-fixed": "#e5e2e1",
+              "primary-fixed-dim": "#d6d4d3",
+              "secondary-container": "#e0e2e8",
+              "on-secondary-fixed-variant": "#585c60",
+              "surface": "#f8f9fa",
+              "inverse-primary": "#ffffff",
+              "on-error": "#fff7f6",
+              "outline-variant": "#abb3b7",
+              "inverse-on-surface": "#9b9d9e",
+              "tertiary-container": "#f0f4fa",
+              "error-container": "#fe8983",
+              "tertiary-dim": "#4f5459",
+              "on-secondary-fixed": "#3c4044",
+              "surface-variant": "#dbe4e7",
+              "surface-container-highest": "#dbe4e7"
+            },
+            fontFamily: {
+              "headline": ["Noto Serif", "serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Header: TopAppBar (Shared Component Mapping) -->
+<header class="bg-[#f8f9fa]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl fixed top-0 w-full z-50">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<button class="text-[#5f5e5e] dark:text-[#eaeff1] hover:opacity-70 transition-opacity duration-300 active:scale-95 active:duration-150">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-xl font-light tracking-[0.3em] text-[#2b3437] dark:text-[#f8f9fa] font-headline">MIVI ACESSÓRIOS</h1>
+<button class="text-[#5f5e5e] dark:text-[#eaeff1] hover:opacity-70 transition-opacity duration-300 active:scale-95 active:duration-150">
+<span class="material-symbols-outlined">shopping_bag</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-28 md:pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Hero Section: Elegância em cada detalhe -->
+<section class="mb-12 relative h-[353px] overflow-hidden flex items-center justify-center">
+<div class="absolute inset-0 bg-surface-container-high">
+<img alt="close-up of polished 925 silver jewelry on light textured silk fabric with soft morning light shadows" class="w-full h-full object-cover mix-blend-multiply opacity-30" data-alt="close-up of polished 925 silver jewelry on light textured silk fabric with soft morning light shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDurTmdj5zRtfXV8tvf9bslQk-akC3N4ftHzvoOdUME6wNL-jQUv4ZkT4C7kI9VL0xiXZIqey15bqfsGuBtPvG_LXmIgOySPR8C3GVvn8D8b0ljtatG2BMO5Yttu8jEWTIIhMr-TSa64Xt5wZXJyX-HNYf9VY9ZZZX70sckzsLFb18a2ZG2Pd1F-YMcNrK41yO1yttB7UFLVCXvMuurZ6sFdsJCUHRcK0XV4taqEcHM8ODw5bpUxiy-iUuqnWw7K0DIcqpWvVY_KQsz"/>
+</div>
+<div class="relative z-10 text-center space-y-4">
+<p class="font-body text-xs tracking-[0.3em] text-on-surface-variant uppercase">Silver Curation</p>
+<h2 class="font-headline italic text-4xl md:text-5xl text-on-surface">Elegância em cada detalhe</h2>
+<div class="h-px w-12 bg-primary mx-auto opacity-40"></div>
+</div>
+</section>
+<!-- Category Quick Filter -->
+<nav class="mb-12 overflow-x-auto no-scrollbar whitespace-nowrap py-2">
+<div class="flex space-x-10 items-center justify-center min-w-max px-4">
+<a class="font-label text-[0.6875rem] uppercase tracking-[0.15rem] text-primary font-semibold border-b border-primary/40 pb-1" href="#">Todos</a>
+<a class="font-label text-[0.6875rem] uppercase tracking-[0.15rem] text-on-surface-variant hover:text-primary transition-colors" href="#">Anéis</a>
+<a class="font-label text-[0.6875rem] uppercase tracking-[0.15rem] text-on-surface-variant hover:text-primary transition-colors" href="#">Brincos</a>
+<a class="font-label text-[0.6875rem] uppercase tracking-[0.15rem] text-on-surface-variant hover:text-primary transition-colors" href="#">Colares</a>
+<a class="font-label text-[0.6875rem] uppercase tracking-[0.15rem] text-on-surface-variant hover:text-primary transition-colors" href="#">Prata 925</a>
+<a class="font-label text-[0.6875rem] uppercase tracking-[0.15rem] text-on-surface-variant hover:text-primary transition-colors" href="#">Banhados</a>
+</div>
+</nav>
+<!-- Product Grid (Asymmetric & Curated) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16">
+<!-- Card 1 -->
+<article class="group">
+<div class="relative bg-surface-container-low aspect-[4/5] mb-6 overflow-hidden transition-colors duration-500 group-hover:bg-surface-variant/30">
+<img alt="minimalist 925 silver ring on a white marble pedestal with soft architectural shadows" class="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0" data-alt="minimalist 925 silver ring on a white marble pedestal with soft architectural shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0PbLeJ1bq6KruCdv0rWz-17ZPqf92kOShmPFF7T3JFFWEHf8LMR57pi3r4NuYLInaD5zSWiuXJghOknHysaFNsJ-F5KGMx4mt_CgrsCRBTrf7LPQEI5qdLleUEKskuVamlBzKOGSvB9Xy_cGAoY-CmuRnld2Q3kjX9qNseSIdfDEy4XMg4MloKw9dv5j0esTRNy-8g_SWaLbIbpexzqqXOpdrhlVpJzf3ov1LW3sCKnwKoUrLgmYhFcICo9Ot4xjmrWFYcLl7XJTl"/>
+<div class="absolute top-4 left-4 bg-surface-container-highest px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">Coleção Mivi</div>
+</div>
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<h3 class="font-headline text-xl text-on-surface">Anel Horizonte Fluido</h3>
+<p class="font-label text-[0.75rem] text-outline tracking-wider uppercase">Prata 925 • Esculpido</p>
+</div>
+<span class="font-body text-lg font-light text-on-surface">R$ 289,00</span>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="group md:mt-24">
+<div class="relative bg-surface-container-low aspect-[4/5] mb-6 overflow-hidden transition-colors duration-500 group-hover:bg-surface-variant/30">
+<img alt="pair of delicate silver drop earrings reflecting light against a neutral grey studio background" class="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0" data-alt="pair of delicate silver drop earrings reflecting light against a neutral grey studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdvtuZngiYnPrwaMOmuBFW6t3LiAVnGC9fu6KXqa5fCQPHkXQVsPx3zMfAbas875QXhETVzegdbkx6Rs1eI6BdUyo-2_U9A5NO_TmzHpAKOtZ9Ok8s0IqqXDqwWcBp_t1nQKazc7c-x7lUBRr4SPy6i6n1SDssZ6LSECuIrxE2OAogH3mkYTTy8TWgYlc9O0eJwK5v9suX5o2ALNpwVOz8Ucb1kaLp_ciNXiA3AoZ1hi-PF77XkqlIocaeqgQlIAev-RWwdoOyu46i"/>
+</div>
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<h3 class="font-headline text-xl text-on-surface">Brincos Gota de Orvalho</h3>
+<p class="font-label text-[0.75rem] text-outline tracking-wider uppercase">Prata 925 • Polido</p>
+</div>
+<span class="font-body text-lg font-light text-on-surface">R$ 175,00</span>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="group">
+<div class="relative bg-surface-container-low aspect-[4/5] mb-6 overflow-hidden transition-colors duration-500 group-hover:bg-surface-variant/30">
+<img alt="layered silver chains with a minimalist pendant resting on a clean white surface with soft morning light" class="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0" data-alt="layered silver chains with a minimalist pendant resting on a clean white surface with soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTV579xSLdvoF0JoHzqVjLRAmkb2n_fcbGBABy80ebzb6Zc8HsDklDGlmo39zWQ11AqhgZjc3X5s7Id20qszVeQEP3nW0L1kOiyFlcVrzsByrwynqg0DjfbtH8mRrMnQ_v5aS1QBmT12Hwa0x5zyQMUrdEyHTD6Iz2g8_EobciG9kDl5FbgguQTvrM0tTwUnbFJ6vsHHRaTpBbatDidrCB7xMh3NeFoSZ9S7xmq9Kc9mEIUOWxvhcwDKecObgn7kkgf3Zh54SMO0N5"/>
+</div>
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<h3 class="font-headline text-xl text-on-surface">Colar Minimalista Nó</h3>
+<p class="font-label text-[0.75rem] text-outline tracking-wider uppercase">Banhado a Ródio</p>
+</div>
+<span class="font-body text-lg font-light text-on-surface">R$ 342,00</span>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="group md:mt-24">
+<div class="relative bg-surface-container-low aspect-[4/5] mb-6 overflow-hidden transition-colors duration-500 group-hover:bg-surface-variant/30">
+<img alt="chunky silver chain bracelet close-up on a soft sand-colored textile surface" class="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0" data-alt="chunky silver chain bracelet close-up on a soft sand-colored textile surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArcLMgUjjG3WmfPZz0IkhOIWoGcSOxQW1rCFNqczt72LrQiWCf7al5tP7cUXiisCELkogDFhPh80uL_pprjgMQnG905_YImD3L7Mr1IhZegwJrGA9XEYrlS_KdXZIyzYAkdmzPr4zfwP4trW1NZ1SdIN1FgPmTs518JsO1hjKq5P6D0SksLwJ4lI0iSnrL04dsLxIeafEvQy2kwyRnhWmFwwV6EwlfYSBsGEK-pIodoAE7PgKxo-H02RarSpBMJYBPHTg56zqSHneD"/>
+</div>
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<h3 class="font-headline text-xl text-on-surface">Pulseira Elo Infinito</h3>
+<p class="font-label text-[0.75rem] text-outline tracking-wider uppercase">Prata 925 • Geométrico</p>
+</div>
+<span class="font-body text-lg font-light text-on-surface">R$ 510,00</span>
+</div>
+</article>
+</section>
+<!-- Footer / Admin Link -->
+<footer class="mt-32 pb-24 text-center">
+<div class="h-px w-full bg-surface-variant mb-12"></div>
+<p class="font-label text-[0.6rem] tracking-[0.2em] text-outline-variant mb-4 uppercase">© 2024 Mivi Acessórios</p>
+<a class="font-label text-[0.6875rem] tracking-[0.1rem] text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center space-x-2" href="#">
+<span>ÁREA ADMINISTRATIVA</span>
+<span class="material-symbols-outlined text-sm">shield_person</span>
+</a>
+</footer>
+</main>
+<!-- Navigation Shell: BottomNavBar (Shared Component Mapping) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-[#f8f9fa]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl z-50 rounded-t-xl shadow-[0px_-10px_30px_rgba(43,52,55,0.04)] px-4 pb-6 pt-3 flex justify-around items-center">
+<!-- Active: COLLECTION -->
+<a class="flex flex-col items-center justify-center text-[#2b3437] dark:text-[#ffffff] bg-[#eaeff1] dark:bg-[#2b3437] rounded-full px-4 py-1 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-inter text-[0.6875rem] uppercase tracking-[0.1rem] mt-1">COLLECTION</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#737c7f] dark:text-[#abb3b7] hover:text-[#5f5e5e] dark:hover:text-[#f8f9fa] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="font-inter text-[0.6875rem] uppercase tracking-[0.1rem] mt-1">SEARCH</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#737c7f] dark:text-[#abb3b7] hover:text-[#5f5e5e] dark:hover:text-[#f8f9fa] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="font-inter text-[0.6875rem] uppercase tracking-[0.1rem] mt-1">SAVED</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#737c7f] dark:text-[#abb3b7] hover:text-[#5f5e5e] dark:hover:text-[#f8f9fa] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">shield_person</span>
+<span class="font-inter text-[0.6875rem] uppercase tracking-[0.1rem] mt-1">ADMIN</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,124 @@
+import React from 'react';
+import { ShoppingBag, X, Plus, Trash2 } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
+import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
+
+interface CartDrawerProps {
+  className?: string;
+}
+
+export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
+  const { cart, isCartOpen, toggleCart, removeFromCart, addToCart } = useAppContext();
+
+  // Convert R$ strings to numbers for summing. e.g "R$ 289,00" -> 289
+  const parsePrice = (priceStr: string) => {
+    const num = priceStr.replace('R$ ', '').replace('.', '').replace(',', '.');
+    return parseFloat(num) || 0;
+  };
+
+  const total = cart.reduce((acc, item) => acc + (parsePrice(item.price) * item.quantity), 0);
+  const formattedTotal = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  const handleCheckout = () => {
+    if (!hasStoreWhatsappNumber) {
+      window.alert('Configure o número da loja em VITE_STORE_WHATSAPP_NUMBER para finalizar pelo WhatsApp.');
+      return;
+    }
+
+    const itemLines = cart.map(
+      item => `- ${item.name} x${item.quantity} (${item.price})`
+    );
+
+    const message = [
+      'Oi! Vim pelo site da Mivi e quero fechar minha compra.',
+      '',
+      'Itens do pedido:',
+      ...itemLines,
+      '',
+      `Total estimado: ${formattedTotal}`,
+      '',
+      'Quero confirmar valores, entrega e forma de pagamento.',
+    ].join('\n');
+
+    const whatsappUrl = `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  if (!isCartOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 z-50 bg-[#101418]/28 backdrop-blur-sm transition-opacity"
+        onClick={toggleCart}
+      />
+
+      {/* Drawer */}
+      <aside className={`fixed top-0 right-0 z-[60] flex h-full w-full max-w-md flex-col bg-surface-container-lowest px-6 pb-28 pt-6 shadow-2xl transition-transform duration-300 ease-in-out ${className}`}>
+        
+        <header className="flex justify-between items-center mb-8">
+          <h2 className="font-headline text-2xl text-on-surface flex items-center gap-3">
+            <ShoppingBag className="w-5 h-5 stroke-[1.5]" />
+            Sua Sacola
+          </h2>
+          <button 
+            onClick={toggleCart}
+            className="text-on-surface-variant hover:text-on-surface hover:rotate-90 transition-all active:scale-90"
+          >
+            <X className="w-6 h-6 stroke-[1.5]" />
+          </button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar space-y-6">
+          {cart.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center space-y-4 text-on-surface-variant opacity-70">
+              <ShoppingBag className="w-12 h-12 stroke-1" />
+              <p className="font-body font-light text-center">Sua sacola está vazia.</p>
+            </div>
+          ) : (
+            cart.map(item => (
+              <div key={item.id} className="flex gap-4 p-4 bg-surface rounded-md">
+                <img src={item.imageUrl} alt={item.name} className="w-20 h-24 object-cover rounded-sm grayscale hover:grayscale-0 transition-all" />
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-headline text-lg">{item.name}</h3>
+                    <p className="font-label text-[0.65rem] tracking-wider text-outline uppercase">{item.features.join(' • ')}</p>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <span className="font-body text-sm font-light">{item.price}</span>
+                    <div className="flex items-center gap-3 bg-surface-container rounded-full px-2 py-1">
+                      <button onClick={() => removeFromCart(item.id)} className="text-on-surface-variant hover:text-error transition-colors">
+                        <Trash2 className="w-4 h-4 stroke-[1.5]" />
+                      </button>
+                      <span className="font-body text-sm w-4 text-center">{item.quantity}</span>
+                      <button onClick={() => addToCart(item)} className="text-on-surface-variant hover:text-primary transition-colors">
+                        <Plus className="w-4 h-4 stroke-[1.5]" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {cart.length > 0 && (
+          <div className="pt-6 border-t border-surface-container mt-auto">
+            <div className="flex justify-between items-center mb-6">
+              <span className="font-label text-sm uppercase tracking-wider text-on-surface-variant">Total Estimado</span>
+              <span className="font-headline text-2xl text-on-surface">{formattedTotal}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCheckout}
+              className="w-full bg-primary text-on-primary py-4 rounded-sm font-label text-xs uppercase tracking-[0.2em] hover:bg-primary-dim transition-colors active:scale-[0.98]"
+            >
+              Finalizar Compra
+            </button>
+          </div>
+        )}
+      </aside>
+    </>
+  );
+};
