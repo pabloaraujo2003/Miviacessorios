@@ -22,10 +22,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <article className={`group ${asymmetricClass} ${className}`}>
-      <div className="relative bg-surface-container-low aspect-[4/5] mb-6 overflow-hidden transition-colors duration-500 group-hover:bg-surface-variant/30">
+      <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low transition-colors duration-300 md:group-hover:bg-surface-variant/30">
         <img 
           alt={product.name} 
-          className="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105 group-hover:grayscale-0" 
+          className="interactive-media h-full w-full object-cover grayscale md:group-hover:scale-105 md:group-hover:grayscale-0" 
           src={product.imageUrl}
         />
         
@@ -54,10 +54,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex gap-2">
           <button 
             onClick={() => toggleSaved(product)}
-            className={`flex-1 flex justify-center items-center py-3 border transition-all active:scale-95 ${
+            className={`interactive-surface flex flex-1 items-center justify-center border py-3 ${
               saved 
                 ? 'border-error text-error bg-error/5' 
-                : 'border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary'
+                : 'border-outline-variant text-on-surface-variant active:border-primary active:text-primary'
             }`}
           >
             <Heart className={`w-5 h-5 ${saved ? 'fill-current' : ''} stroke-[1.5]`} />
@@ -65,7 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           
           <button 
             onClick={() => addToCart(product)}
-            className="flex-[3] min-w-0 flex justify-center items-center gap-2 bg-primary text-on-primary py-3 hover:bg-primary-dim transition-colors active:scale-95"
+            className="interactive-surface flex min-w-0 flex-[3] items-center justify-center gap-2 bg-primary py-3 text-on-primary active:bg-primary-dim"
           >
             <Plus className="w-5 h-5 stroke-[1.5]" />
             <span className="truncate font-label text-[0.65rem] tracking-[0.15em] uppercase">Adicionar</span>

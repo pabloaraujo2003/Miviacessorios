@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         <button
           aria-label="Abrir menu"
           onClick={toggleMenu}
-          className="shrink-0 text-[#5f5e5e] dark:text-[#eaeff1] hover:opacity-70 transition-opacity duration-300 active:scale-95 active:duration-150"
+          className="mobile-tap-highlight touch-manipulation flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#5f5e5e] transition-[background-color,transform,color] duration-200 active:scale-95 active:bg-[#2b3437]/8 dark:text-[#eaeff1] dark:active:bg-white/10"
         >
           <Menu className="w-6 h-6 stroke-[1.5]" />
         </button>
@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         <button 
           aria-label="Abrir sacola"
           onClick={toggleCart}
-          className="relative shrink-0 text-[#5f5e5e] dark:text-[#eaeff1] hover:opacity-70 transition-opacity duration-300 active:scale-95 active:duration-150"
+          className="mobile-tap-highlight touch-manipulation relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#5f5e5e] transition-[background-color,transform,color] duration-200 active:scale-95 active:bg-[#2b3437]/8 dark:text-[#eaeff1] dark:active:bg-white/10"
         >
           <ShoppingBag className="w-6 h-6 stroke-[1.5]" />
           {cartItemCount > 0 && (

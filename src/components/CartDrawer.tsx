@@ -55,7 +55,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
       />
 
       {/* Drawer */}
-      <aside className={`fixed top-0 right-0 z-[60] flex h-full w-full max-w-md flex-col bg-surface-container-lowest px-6 pb-28 pt-6 shadow-2xl transition-transform duration-300 ease-in-out ${className}`}>
+      <aside className={`fixed top-0 right-0 z-[60] flex h-full w-full max-w-md flex-col bg-surface-container-lowest px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))] shadow-2xl transition-transform duration-300 ease-in-out ${className}`}>
         
         <header className="flex justify-between items-center mb-8">
           <h2 className="font-headline text-2xl text-on-surface flex items-center gap-3">
@@ -64,7 +64,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
           </h2>
           <button 
             onClick={toggleCart}
-            className="text-on-surface-variant hover:text-on-surface hover:rotate-90 transition-all active:scale-90"
+            className="interactive-icon h-11 w-11 rounded-full text-on-surface-variant active:bg-black/5 active:text-on-surface dark:active:bg-white/10"
           >
             <X className="w-6 h-6 stroke-[1.5]" />
           </button>
@@ -79,7 +79,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
           ) : (
             cart.map(item => (
               <div key={item.id} className="flex gap-4 p-4 bg-surface rounded-md">
-                <img src={item.imageUrl} alt={item.name} className="w-20 h-24 object-cover rounded-sm grayscale hover:grayscale-0 transition-all" />
+                <img src={item.imageUrl} alt={item.name} className="interactive-media h-24 w-20 rounded-sm object-cover grayscale md:hover:grayscale-0" />
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-headline text-lg">{item.name}</h3>
@@ -88,11 +88,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
                   <div className="flex justify-between items-end">
                     <span className="font-body text-sm font-light">{item.price}</span>
                     <div className="flex items-center gap-3 bg-surface-container rounded-full px-2 py-1">
-                      <button onClick={() => removeFromCart(item.id)} className="text-on-surface-variant hover:text-error transition-colors">
+                      <button onClick={() => removeFromCart(item.id)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-error/10 active:text-error">
                         <Trash2 className="w-4 h-4 stroke-[1.5]" />
                       </button>
                       <span className="font-body text-sm w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => addToCart(item)} className="text-on-surface-variant hover:text-primary transition-colors">
+                      <button onClick={() => addToCart(item)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-primary/10 active:text-primary">
                         <Plus className="w-4 h-4 stroke-[1.5]" />
                       </button>
                     </div>
@@ -112,7 +112,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
             <button
               type="button"
               onClick={handleCheckout}
-              className="w-full bg-primary text-on-primary py-4 rounded-sm font-label text-xs uppercase tracking-[0.2em] hover:bg-primary-dim transition-colors active:scale-[0.98]"
+              className="interactive-surface w-full rounded-sm bg-primary py-4 font-label text-xs uppercase tracking-[0.2em] text-on-primary active:bg-primary-dim"
             >
               Finalizar Compra
             </button>

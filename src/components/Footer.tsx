@@ -13,7 +13,7 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
         © 2026 Mivi Acessórios
       </p>
       <Link 
-        className="font-label text-[0.6875rem] tracking-[0.1rem] text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center space-x-2" 
+        className="interactive-text flex items-center justify-center space-x-2 font-label text-[0.6875rem] tracking-[0.1rem] text-on-surface-variant active:scale-[0.98]" 
         to="/admin"
       >
         <span>ÁREA ADMINISTRATIVA</span>

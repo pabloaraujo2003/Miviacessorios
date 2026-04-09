@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, hasSupabaseKeys } from '../lib/supabase';
 import { Header } from '../components/Header';
+import { BottomNavBar } from '../components/BottomNavBar';
 import type { Product } from '../data/mockData';
 import { Trash2, Edit2, UploadCloud, Plus, LogOut, KeyRound } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
@@ -212,6 +213,7 @@ export const Admin: React.FC = () => {
             </form>
           </div>
         </main>
+        <BottomNavBar />
       </div>
     );
   }
@@ -341,6 +343,8 @@ export const Admin: React.FC = () => {
 
         </div>
       </main>
+
+      <BottomNavBar />
     </div>
   );
 };

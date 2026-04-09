@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Product } from '../data/mockData';
 import { MOCK_PRODUCTS } from '../data/mockData';
@@ -59,7 +59,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, [isCartOpen, isMenuOpen]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback((product: Product) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -71,13 +71,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
     setIsCartOpen(true); // Open drawer automatically when adding
     setIsMenuOpen(false);
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     setCart(prev => prev.filter(item => item.id !== productId));
-  };
+  }, []);
 
-  const toggleSaved = (product: Product) => {
+  const toggleSaved = useCallback((product: Product) => {
     setSavedItems(prev => {
       const exists = prev.find(item => item.id === product.id);
       if (exists) {
@@ -85,14 +85,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       return [...prev, product];
     });
-  };
+  }, []);
 
-  const isSaved = (productId: string) => {
+  const isSaved = useCallback((productId: string) => {
     return savedItems.some(item => item.id === productId);
-  };
+  }, [savedItems]);
 
-  const clearCart = () => setCart([]);
-  const toggleCart = () => {
+  const clearCart = useCallback(() => setCart([]), []);
+  const toggleCart = useCallback(() => {
     setIsCartOpen(prev => {
       const next = !prev;
       if (next) {
@@ -100,9 +100,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       return next;
     });
-  };
-  const closeCart = () => setIsCartOpen(false);
-  const toggleMenu = () => {
+  }, []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
+  const toggleMenu = useCallback(() => {
     setIsMenuOpen(prev => {
       const next = !prev;
       if (next) {
@@ -110,8 +110,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       return next;
     });
-  };
-  const closeMenu = () => setIsMenuOpen(false);
+  }, []);
+  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
   return (
     <AppContext.Provider 

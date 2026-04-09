@@ -5,6 +5,7 @@
 @layer base {
   html {
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .material-symbols-outlined {
@@ -15,6 +16,7 @@
     @apply font-body bg-background text-on-surface;
     min-height: max(884px, 100dvh);
     overflow-x: hidden;
+    overscroll-behavior-y: contain;
   }
 
   #root {
@@ -24,6 +26,49 @@
 }
 
 @layer utilities {
+  .mobile-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-tap-highlight:focus-visible {
+    outline: 2px solid rgb(43 52 55 / 0.32);
+    outline-offset: 2px;
+  }
+
+  .interactive-text {
+    @apply mobile-tap-highlight touch-manipulation transition-colors duration-200;
+  }
+
+  .interactive-text:active {
+    color: #5f5e5e;
+  }
+
+  .interactive-surface {
+    @apply mobile-tap-highlight touch-manipulation transition-[background-color,border-color,color,transform,box-shadow] duration-200;
+  }
+
+  .interactive-surface:active {
+    transform: scale(0.98);
+  }
+
+  .interactive-icon {
+    @apply mobile-tap-highlight touch-manipulation flex items-center justify-center transition-[background-color,color,transform] duration-200;
+  }
+
+  .interactive-icon:active {
+    transform: scale(0.95);
+  }
+
+  .interactive-media {
+    @apply transition-[filter,transform] duration-300;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .interactive-text:hover {
+      color: #5f5e5e;
+    }
+  }
+
   .no-scrollbar::-webkit-scrollbar { 
     display: none; 
   }

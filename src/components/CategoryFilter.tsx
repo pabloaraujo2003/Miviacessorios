@@ -12,7 +12,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const handleSelect = (e: React.MouseEvent, id: string) => {
+  const handleSelect = (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
     e.preventDefault();
     setActiveCategory(id);
     if (onSelectCategory) {
@@ -26,18 +26,18 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         {CATEGORIES.map((cat) => {
           const isActive = cat.id === activeCategory;
           return (
-            <a 
+            <button 
               key={cat.id}
-              href="#"
+              type="button"
               onClick={(e) => handleSelect(e, cat.id)}
-              className={`font-label text-[0.6875rem] uppercase tracking-[0.15rem] transition-colors ${
+              className={`interactive-text rounded-full px-1 py-2 font-label text-[0.6875rem] uppercase tracking-[0.15rem] active:scale-[0.98] ${
                 isActive 
                   ? "text-primary font-semibold border-b border-primary/40 pb-1" 
-                  : "text-on-surface-variant hover:text-primary"
+                  : "text-on-surface-variant"
               }`}
             >
               {cat.label}
-            </a>
+            </button>
           );
         })}
       </div>
