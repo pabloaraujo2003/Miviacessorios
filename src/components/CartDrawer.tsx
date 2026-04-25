@@ -79,7 +79,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
           ) : (
             cart.map(item => (
               <div key={item.id} className="flex gap-4 p-4 bg-surface rounded-md">
-                <img src={item.imageUrl} alt={item.name} className="interactive-media h-24 w-20 rounded-sm object-cover grayscale md:hover:grayscale-0" />
+                <img src={item.imageUrl} alt={item.name} className="interactive-media h-24 w-20 rounded-sm object-cover" />
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-headline text-lg">{item.name}</h3>

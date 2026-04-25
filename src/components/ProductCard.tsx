@@ -22,10 +22,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <article className={`group ${asymmetricClass} ${className}`}>
-      <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low transition-colors duration-300 md:group-hover:bg-surface-variant/30">
+      <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
         <img 
           alt={product.name} 
-          className="interactive-media h-full w-full object-cover grayscale md:group-hover:scale-105 md:group-hover:grayscale-0" 
+          className="interactive-media h-full w-full object-cover" 
           src={product.imageUrl}
         />
         
