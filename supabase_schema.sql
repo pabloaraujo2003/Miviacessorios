@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS public.products (
     price TEXT NOT NULL,
     "imageUrl" TEXT NOT NULL,
     "collectionId" TEXT,
-    "features" TEXT[] NOT NULL DEFAULT '{}'
+    "features" TEXT[] NOT NULL DEFAULT '{}',
+    "isBundle" BOOLEAN DEFAULT false,
+    "bundledProducts" JSONB DEFAULT '[]'
 );
 
 -- 2. Desabilitar restrições RLS (Row Level Security) para o protótipo público avançar, ou crie as politicas de ALLOW caso queira manter habilitado. 
@@ -29,3 +31,16 @@ CREATE POLICY "Avatar images are publicly accessible."
 CREATE POLICY "Anyone can upload an avatar."
   ON storage.objects FOR INSERT
   WITH CHECK ( bucket_id = 'product-images' );
+
+-- 5. Tabela de Configurações (Hero, etc)
+CREATE TABLE IF NOT EXISTS public.settings (
+    id TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.settings DISABLE ROW LEVEL SECURITY;
+
+INSERT INTO public.settings (id, value) 
+VALUES ('hero_image_url', '/src/assets/hero.png')
+ON CONFLICT (id) DO NOTHING;

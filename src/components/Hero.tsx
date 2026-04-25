@@ -1,17 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface HeroProps {
   className?: string;
 }
 
 export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
+  const [heroUrl, setHeroUrl] = useState('/src/assets/hero.png');
+
+  useEffect(() => {
+    const fetchHero = async () => {
+      const { data } = await supabase.from('settings').select('value').eq('id', 'hero_image_url').single();
+      if (data) setHeroUrl(data.value);
+    };
+    fetchHero();
+  }, []);
+
   return (
     <section className={`relative mb-12 flex h-[300px] items-center justify-center overflow-hidden sm:h-[353px] ${className}`}>
       <div className="absolute inset-0 bg-surface-container-high">
         <img 
-          alt="close-up of polished 925 silver jewelry" 
-          className="w-full h-full object-cover mix-blend-multiply opacity-30" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDurTmdj5zRtfXV8tvf9bslQk-akC3N4ftHzvoOdUME6wNL-jQUv4ZkT4C7kI9VL0xiXZIqey15bqfsGuBtPvG_LXmIgOySPR8C3GVvn8D8b0ljtatG2BMO5Yttu8jEWTIIhMr-TSa64Xt5wZXJyX-HNYf9VY9ZZZX70sckzsLFb18a2ZG2Pd1F-YMcNrK41yO1yttB7UFLVCXvMuurZ6sFdsJCUHRcK0XV4taqEcHM8ODw5bpUxiy-iUuqnWw7K0DIcqpWvVY_KQsz"
+          alt="Mivie jewelry hero" 
+          className="w-full h-full object-cover mix-blend-multiply opacity-50" 
+          src={heroUrl}
         />
       </div>
       

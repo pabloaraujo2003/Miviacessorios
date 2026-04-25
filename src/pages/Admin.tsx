@@ -33,6 +33,8 @@ export const Admin: React.FC = () => {
   });
   const [bundledItems, setBundledItems] = useState<{id: string, name: string, price: string}[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [uploadingHero, setUploadingHero] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -47,6 +49,8 @@ export const Admin: React.FC = () => {
       setIsSessionChecked(true);
     });
 
+    fetchHeroImage();
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -55,6 +59,39 @@ export const Admin: React.FC = () => {
       fetchProducts();
     }
   }, [session]);
+
+  const fetchHeroImage = async () => {
+    const { data } = await supabase.from('settings').select('value').eq('id', 'hero_image_url').single();
+    if (data) setHeroImageUrl(data.value);
+  };
+
+  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !hasSupabaseKeys) return;
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `hero_${Math.random()}.${fileExt}`;
+    const filePath = `mivie/${fileName}`;
+
+    setUploadingHero(true);
+    const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, file);
+
+    if (!uploadError) {
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filePath);
+      const newUrl = urlData.publicUrl;
+      
+      const { error: updateError } = await supabase.from('settings').upsert({ id: 'hero_image_url', value: newUrl });
+      
+      if (!updateError) {
+        setHeroImageUrl(newUrl);
+        alert('Foto do Hero atualizada com sucesso!');
+      } else {
+        alert('Erro ao salvar nova URL do Hero.');
+      }
+    } else {
+      alert('Erro ao fazer upload da imagem do Hero.');
+    }
+    setUploadingHero(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +122,15 @@ export const Admin: React.FC = () => {
 
     const { data, error } = await supabase.from('products').select('*');
     if (!error && data) {
-      setProducts(data as Product[]);
+      // Map database columns to the interface if they differ in case
+      const mappedData = data.map((p: any) => ({
+        ...p,
+        imageUrl: p.imageUrl,
+        collectionId: p.collectionId,
+        isBundle: p.isBundle,
+        bundledProducts: p.bundledProducts
+      }));
+      setProducts(mappedData as Product[]);
     }
     setLoading(false);
   };
@@ -172,19 +217,32 @@ export const Admin: React.FC = () => {
       features: formData.features.split(',').map(f => f.trim()),
       isBundle: formData.isBundle,
       bundledProducts: formData.isBundle ? bundledItems.map(item => ({
-        ...item,
+        id: item.id,
+        name: item.name,
+        price: item.price,
         features: formData.features.split(',').map(f => f.trim())
-      })) : null
+      })) : []
     };
 
     if (isEditing) {
-      await supabase.from('products').update(payload).eq('id', currentId);
+      const { error } = await supabase.from('products').update(payload).eq('id', currentId);
+      if (error) {
+        console.error('Erro ao atualizar:', error);
+        alert(`Erro ao atualizar: ${error.message}`);
+        return;
+      }
     } else {
-      await supabase.from('products').insert([payload]);
+      const { error } = await supabase.from('products').insert([payload]);
+      if (error) {
+        console.error('Erro ao inserir:', error);
+        alert(`Erro ao inserir: ${error.message}`);
+        return;
+      }
     }
     
     resetForm();
     fetchProducts();
+    alert('Produto salvo com sucesso!');
   };
 
   const deleteProduct = async (id: string) => {
@@ -268,6 +326,29 @@ export const Admin: React.FC = () => {
             <LogOut className="w-4 h-4" /> Desconectar
           </button>
         </div>
+
+        {/* Seção de Banner Hero */}
+        <section className="mb-12 bg-surface-container-low p-6 shadow-sm border border-outline/10">
+          <h2 className="font-headline text-xl mb-4">Banner do Hero (Página Inicial)</h2>
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="w-full md:w-1/2 aspect-[21/9] bg-surface-variant overflow-hidden rounded-sm relative">
+              <img src={heroImageUrl} className="w-full h-full object-cover" alt="Hero Current" />
+              {uploadingHero && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <span className="text-white font-label text-xs tracking-widest animate-pulse">ATUALIZANDO...</span>
+                </div>
+              )}
+            </div>
+            <div className="flex-1 space-y-4">
+              <p className="text-on-surface-variant text-sm font-body">Esta imagem aparece no topo da sua página inicial. Recomendamos fotos horizontais e nítidas das suas jóias.</p>
+              <label className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-3 text-xs font-label uppercase tracking-widest cursor-pointer hover:bg-primary-dim transition-colors">
+                <UploadCloud className="w-4 h-4" /> 
+                {uploadingHero ? 'Enviando...' : 'Trocar Foto do Hero'}
+                <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} disabled={uploadingHero} />
+              </label>
+            </div>
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Formulário */}

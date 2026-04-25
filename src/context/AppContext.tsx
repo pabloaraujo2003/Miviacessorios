@@ -42,7 +42,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const fetchProducts = async () => {
         const { data, error } = await supabase.from('products').select('*');
         if (data && !error) {
-          setProducts(data as Product[]);
+          const mappedData = data.map((p: any) => ({
+            ...p,
+            imageUrl: p.imageUrl,
+            collectionId: p.collectionId,
+            isBundle: p.isBundle,
+            bundledProducts: p.bundledProducts
+          }));
+          setProducts(mappedData as Product[]);
         }
         setIsLoadingProducts(false);
       };
