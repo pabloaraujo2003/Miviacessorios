@@ -16,6 +16,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { addToCart, toggleSaved, isSaved } = useAppContext();
   const [showBundleMenu, setShowBundleMenu] = React.useState(false);
+  const [isZoomed, setIsZoomed] = React.useState(false);
   const saved = isSaved(product.id);
 
   // Add asymmetric spacing for even items matching the original design
@@ -50,7 +51,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
         <img 
           alt={product.name} 
-          className="interactive-media h-full w-full object-cover" 
+          onClick={() => setIsZoomed(true)}
+          className="interactive-media h-full w-full object-cover cursor-zoom-in" 
           src={product.imageUrl}
         />
         
@@ -90,6 +92,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             >
               Adicionar Conjunto
             </button>
+          </div>
+        )}
+
+        {/* Zoom Modal */}
+        {isZoomed && (
+          <div 
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 animate-in fade-in duration-300"
+            onClick={() => setIsZoomed(false)}
+          >
+            <button 
+              className="absolute top-6 right-6 text-white/70 hover:text-white p-2 z-[70]"
+              onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+            >
+              <Plus className="w-8 h-8 rotate-45 stroke-[1.5]" />
+            </button>
+            <div className="relative w-full h-full p-4 flex items-center justify-center">
+              <img 
+                src={product.imageUrl} 
+                alt={product.name}
+                className="max-w-full max-h-full object-contain animate-in zoom-in-95 duration-500"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <div className="absolute bottom-10 left-0 right-0 text-center">
+              <p className="text-white/60 font-label text-[0.6rem] tracking-[0.3em] uppercase">Toque para fechar</p>
+            </div>
           </div>
         )}
       </div>
