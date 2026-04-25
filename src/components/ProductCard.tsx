@@ -15,13 +15,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   className = '' 
 }) => {
   const { addToCart, toggleSaved, isSaved } = useAppContext();
+  const [showBundleMenu, setShowBundleMenu] = React.useState(false);
   const saved = isSaved(product.id);
 
   // Add asymmetric spacing for even items matching the original design
   const asymmetricClass = index % 2 !== 0 ? 'md:mt-24' : '';
 
-  const handleAddBundle = () => {
+  const handleAddClick = () => {
     if (product.isBundle && product.bundledProducts) {
+      setShowBundleMenu(!showBundleMenu);
+    } else {
+      addToCart(product);
+    }
+  };
+
+  const handleAddAll = () => {
+    if (product.bundledProducts) {
       product.bundledProducts.forEach(p => {
         addToCart({
           id: p.id,
@@ -32,8 +41,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           imageUrl: product.imageUrl
         });
       });
-    } else {
-      addToCart(product);
+      setShowBundleMenu(false);
     }
   };
 
@@ -52,22 +60,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {product.isBundle && product.bundledProducts && (
-          <div className="absolute bottom-4 left-4 right-4 bg-surface-container-highest/90 backdrop-blur-sm p-3">
-            <p className="font-label text-[0.6rem] tracking-widest uppercase mb-2 text-primary">Nesta foto:</p>
-            <div className="space-y-2">
+        {product.isBundle && product.bundledProducts && showBundleMenu && (
+          <div className="absolute bottom-0 left-0 right-0 bg-surface-container-highest p-4 pt-5 flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom duration-300 rounded-t-xl max-h-[85%] z-20">
+            <div className="flex justify-between items-center mb-3">
+              <p className="font-label text-[0.65rem] tracking-[0.2em] uppercase text-primary font-bold">Itens Disponíveis</p>
+              <button onClick={() => setShowBundleMenu(false)} className="text-on-surface-variant hover:text-primary p-1">
+                <Plus className="w-5 h-5 rotate-45" />
+              </button>
+            </div>
+            <div className="space-y-3 overflow-y-auto no-scrollbar mb-4">
               {product.bundledProducts.map(p => (
-                <div key={p.id} className="flex justify-between items-center gap-2">
-                   <span className="font-body text-[0.7rem] truncate">{p.name}</span>
+                <div key={p.id} className="flex justify-between items-center gap-3 border-b border-outline-variant/30 pb-2 last:border-0">
+                   <div className="min-w-0">
+                     <p className="font-body text-[0.75rem] leading-tight truncate text-on-surface font-medium">{p.name}</p>
+                     <p className="font-body text-[0.65rem] text-on-surface-variant mt-0.5">{p.price}</p>
+                   </div>
                    <button 
                     onClick={() => addToCart({...p, category: product.category, imageUrl: product.imageUrl})}
-                    className="shrink-0 bg-primary text-on-primary p-1 rounded-sm active:scale-95 transition-transform"
+                    className="shrink-0 bg-primary text-on-primary p-2 rounded-sm active:scale-90 transition-transform shadow-sm"
                    >
-                     <Plus className="w-3 h-3" />
+                     <Plus className="w-4 h-4" />
                    </button>
                 </div>
               ))}
             </div>
+            <button 
+              onClick={handleAddAll}
+              className="w-full bg-primary text-on-primary py-2.5 text-[0.6rem] font-label uppercase tracking-widest active:bg-primary-dim transition-all rounded-sm shadow-md"
+            >
+              Adicionar Conjunto
+            </button>
           </div>
         )}
       </div>
@@ -100,12 +122,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
           
           <button 
-            onClick={handleAddBundle}
-            className="interactive-surface flex min-w-0 flex-[3] items-center justify-center gap-2 bg-primary py-3 text-on-primary active:bg-primary-dim"
+            onClick={handleAddClick}
+            className={`interactive-surface flex min-w-0 flex-[3] items-center justify-center gap-2 py-3 text-on-primary transition-colors ${
+              showBundleMenu ? 'bg-surface-variant text-on-surface-variant' : 'bg-primary active:bg-primary-dim'
+            }`}
           >
-            <Plus className="w-5 h-5 stroke-[1.5]" />
+            <Plus className={`w-5 h-5 stroke-[1.5] transition-transform duration-300 ${showBundleMenu ? 'rotate-45' : ''}`} />
             <span className="truncate font-label text-[0.65rem] tracking-[0.15em] uppercase">
-              {product.isBundle ? 'Adicionar Tudo' : 'Adicionar'}
+              {product.isBundle ? (showBundleMenu ? 'Fechar Seleção' : 'Ver Opções') : 'Adicionar'}
             </span>
           </button>
         </div>
