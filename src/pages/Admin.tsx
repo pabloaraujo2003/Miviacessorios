@@ -28,8 +28,10 @@ export const Admin: React.FC = () => {
     price: '',
     imageUrl: '',
     collectionId: '',
-    features: ''
+    features: '',
+    isBundle: false
   });
+  const [bundledItems, setBundledItems] = useState<{id: string, name: string, price: string}[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export const Admin: React.FC = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setIsSessionChecked(true);
     });
 
     return () => subscription.unsubscribe();
@@ -87,8 +90,24 @@ export const Admin: React.FC = () => {
     setLoading(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setFormData({ ...formData, [name]: val });
+  };
+
+  const addBundledItem = () => {
+    setBundledItems([...bundledItems, { id: crypto.randomUUID(), name: '', price: '' }]);
+  };
+
+  const updateBundledItem = (index: number, field: 'name' | 'price', value: string) => {
+    const newItems = [...bundledItems];
+    newItems[index][field] = value;
+    setBundledItems(newItems);
+  };
+
+  const removeBundledItem = (index: number) => {
+    setBundledItems(bundledItems.filter((_, i) => i !== index));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,14 +138,25 @@ export const Admin: React.FC = () => {
       price: product.price,
       imageUrl: product.imageUrl,
       collectionId: product.collectionId || '',
-      features: product.features.join(', ')
+      features: product.features.join(', '),
+      isBundle: product.isBundle || false
     });
+    setBundledItems(product.bundledProducts ? product.bundledProducts.map(p => ({ id: p.id, name: p.name, price: p.price })) : []);
   };
 
   const resetForm = () => {
     setIsEditing(false);
     setCurrentId('');
-    setFormData({ name: '', category: 'rings', price: '', imageUrl: '', collectionId: '', features: '' });
+    setFormData({ 
+      name: '', 
+      category: 'rings', 
+      price: '', 
+      imageUrl: '', 
+      collectionId: '', 
+      features: '',
+      isBundle: false
+    });
+    setBundledItems([]);
   };
 
   const submitForm = async (e: React.FormEvent) => {
@@ -139,7 +169,12 @@ export const Admin: React.FC = () => {
       price: formData.price,
       imageUrl: formData.imageUrl,
       collectionId: formData.collectionId,
-      features: formData.features.split(',').map(f => f.trim())
+      features: formData.features.split(',').map(f => f.trim()),
+      isBundle: formData.isBundle,
+      bundledProducts: formData.isBundle ? bundledItems.map(item => ({
+        ...item,
+        features: formData.features.split(',').map(f => f.trim())
+      })) : null
     };
 
     if (isEditing) {
@@ -285,6 +320,63 @@ export const Admin: React.FC = () => {
                 <label className="block font-label text-xs tracking-wider mb-1">TAGS/FEATURES (Separados por vírgula)</label>
                 <input required placeholder="Ex: Prata 925, Esculpido" type="text" name="features" value={formData.features} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
               </div>
+
+              <div className="flex items-center gap-2 py-2">
+                <input 
+                  type="checkbox" 
+                  id="isBundle" 
+                  name="isBundle" 
+                  checked={formData.isBundle} 
+                  onChange={handleInputChange}
+                  className="w-4 h-4 accent-primary"
+                />
+                <label htmlFor="isBundle" className="font-label text-xs tracking-wider">ESTA FOTO CONTÉM MÚLTIPLOS PRODUTOS</label>
+              </div>
+
+              {formData.isBundle && (
+                <div className="space-y-4 border-l-2 border-primary/20 pl-4 py-2">
+                  <div className="flex justify-between items-center">
+                    <label className="block font-label text-xs tracking-wider">PRODUTOS NA FOTO</label>
+                    <button 
+                      type="button" 
+                      onClick={addBundledItem}
+                      className="text-[0.6rem] font-label uppercase tracking-widest text-primary hover:underline"
+                    >
+                      + Adicionar Item
+                    </button>
+                  </div>
+                  
+                  {bundledItems.map((item, index) => (
+                    <div key={item.id} className="flex gap-2 items-start bg-surface-variant/20 p-2 rounded-sm relative group">
+                      <div className="flex-1 space-y-2">
+                        <input 
+                          placeholder="Nome do Item" 
+                          value={item.name} 
+                          onChange={(e) => updateBundledItem(index, 'name', e.target.value)}
+                          className="w-full bg-surface border border-outline-variant px-2 py-1 text-xs focus:border-primary focus:outline-none"
+                        />
+                        <input 
+                          placeholder="Preço (Ex: R$ 89,00)" 
+                          value={item.price} 
+                          onChange={(e) => updateBundledItem(index, 'price', e.target.value)}
+                          className="w-full bg-surface border border-outline-variant px-2 py-1 text-xs focus:border-primary focus:outline-none"
+                        />
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => removeBundledItem(index)}
+                        className="text-error opacity-50 hover:opacity-100 transition-opacity p-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {bundledItems.length === 0 && (
+                    <p className="text-[0.6rem] text-on-surface-variant italic">Clique em adicionar para listar os itens desta foto.</p>
+                  )}
+                </div>
+              )}
 
               <button type="submit" disabled={uploadingImage} className="w-full bg-primary text-on-primary py-3 mt-4 text-xs tracking-widest font-label uppercase hover:bg-primary-dim transition-colors flex items-center justify-center gap-2">
                 {isEditing ? <Edit2 className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}

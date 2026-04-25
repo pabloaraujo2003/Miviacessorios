@@ -13,7 +13,15 @@ export const Home: React.FC = () => {
 
   const filteredProducts = selectedCategory === 'all' 
     ? products 
-    : products.filter(p => p.category === selectedCategory);
+    : products.filter(p => {
+        if (selectedCategory === 'silver925') {
+          return p.features.some(f => f.toLowerCase().includes('prata 925'));
+        }
+        if (selectedCategory === 'goldplated') {
+          return p.features.some(f => f.toLowerCase().includes('banhado'));
+        }
+        return p.category === selectedCategory;
+      });
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background text-on-surface">

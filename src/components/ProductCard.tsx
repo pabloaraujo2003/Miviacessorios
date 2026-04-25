@@ -20,6 +20,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // Add asymmetric spacing for even items matching the original design
   const asymmetricClass = index % 2 !== 0 ? 'md:mt-24' : '';
 
+  const handleAddBundle = () => {
+    if (product.isBundle && product.bundledProducts) {
+      product.bundledProducts.forEach(p => {
+        addToCart({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          features: p.features,
+          category: product.category,
+          imageUrl: product.imageUrl
+        });
+      });
+    } else {
+      addToCart(product);
+    }
+  };
+
   return (
     <article className={`group ${asymmetricClass} ${className}`}>
       <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
@@ -32,6 +49,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {product.collectionId && (
           <div className="absolute top-4 left-4 bg-surface-container-highest px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
             {product.collectionId}
+          </div>
+        )}
+
+        {product.isBundle && product.bundledProducts && (
+          <div className="absolute bottom-4 left-4 right-4 bg-surface-container-highest/90 backdrop-blur-sm p-3">
+            <p className="font-label text-[0.6rem] tracking-widest uppercase mb-2 text-primary">Nesta foto:</p>
+            <div className="space-y-2">
+              {product.bundledProducts.map(p => (
+                <div key={p.id} className="flex justify-between items-center gap-2">
+                   <span className="font-body text-[0.7rem] truncate">{p.name}</span>
+                   <button 
+                    onClick={() => addToCart({...p, category: product.category, imageUrl: product.imageUrl})}
+                    className="shrink-0 bg-primary text-on-primary p-1 rounded-sm active:scale-95 transition-transform"
+                   >
+                     <Plus className="w-3 h-3" />
+                   </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -64,11 +100,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
           
           <button 
-            onClick={() => addToCart(product)}
+            onClick={handleAddBundle}
             className="interactive-surface flex min-w-0 flex-[3] items-center justify-center gap-2 bg-primary py-3 text-on-primary active:bg-primary-dim"
           >
             <Plus className="w-5 h-5 stroke-[1.5]" />
-            <span className="truncate font-label text-[0.65rem] tracking-[0.15em] uppercase">Adicionar</span>
+            <span className="truncate font-label text-[0.65rem] tracking-[0.15em] uppercase">
+              {product.isBundle ? 'Adicionar Tudo' : 'Adicionar'}
+            </span>
           </button>
         </div>
       </div>

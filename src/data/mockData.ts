@@ -6,6 +6,13 @@ export interface Product {
   imageUrl: string;
   collectionId?: string;
   features: string[];
+  isBundle?: boolean;
+  bundledProducts?: {
+    id: string;
+    name: string;
+    price: string;
+    features: string[];
+  }[];
 }
 
 export const CATEGORIES = [
