@@ -57,14 +57,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  React.useEffect(() => {
+  /* React.useEffect(() => {
     const shouldLockScroll = isCartOpen || isMenuOpen;
     document.body.style.overflow = shouldLockScroll ? 'hidden' : '';
 
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isCartOpen, isMenuOpen]);
+  }, [isCartOpen, isMenuOpen]); */
 
   const addToCart = useCallback((product: Product) => {
     setCart(prev => {

@@ -11,6 +11,10 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <header className={`bg-[#f8f9fa]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl fixed top-0 w-full z-40 ${className}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
@@ -21,7 +25,10 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         >
           <Menu className="w-6 h-6 stroke-[1.5]" />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-center text-sm font-light tracking-[0.18em] text-[#2b3437] dark:text-[#f8f9fa] font-headline sm:text-base md:text-xl md:tracking-[0.3em]">
+        <h1 
+          onClick={scrollToTop}
+          className="min-w-0 flex-1 cursor-pointer select-none truncate text-center text-sm font-light tracking-[0.18em] text-[#2b3437] dark:text-[#f8f9fa] font-headline sm:text-base md:text-xl md:tracking-[0.3em] active:opacity-70 transition-opacity"
+        >
           MIVI ACESSÓRIOS
         </h1>
         <button 

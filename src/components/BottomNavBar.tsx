@@ -15,6 +15,10 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
     return `${base} text-[#737c7f] active:bg-[#2b3437]/6 active:text-[#2b3437] dark:text-[#abb3b7] dark:active:bg-white/8 dark:active:text-[#f8f9fa]`;
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <nav
       aria-label="Navegacao principal mobile"
@@ -22,7 +26,11 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
     >
       <div className="mx-auto flex w-full max-w-7xl items-stretch gap-2 px-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3 sm:px-4">
       
-      <NavLink to="/" className={({ isActive }) => getLinkClasses(isActive)}>
+      <NavLink 
+        to="/" 
+        onClick={scrollToTop}
+        className={({ isActive }) => getLinkClasses(isActive)}
+      >
         {({ isActive }) => (
           <>
             <span className="material-symbols-outlined text-[1.35rem] leading-none" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>auto_awesome</span>
