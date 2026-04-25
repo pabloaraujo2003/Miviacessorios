@@ -79,13 +79,16 @@ export const Admin: React.FC = () => {
       const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filePath);
       const newUrl = urlData.publicUrl;
       
-      const { error: updateError } = await supabase.from('settings').upsert({ id: 'hero_image_url', value: newUrl });
+      const { error: updateError } = await supabase
+        .from('settings')
+        .upsert({ id: 'hero_image_url', value: newUrl }, { onConflict: 'id' });
       
       if (!updateError) {
         setHeroImageUrl(newUrl);
         alert('Foto do Hero atualizada com sucesso!');
       } else {
-        alert('Erro ao salvar nova URL do Hero.');
+        console.error('Erro settings:', updateError);
+        alert(`Erro ao salvar no banco: ${updateError.message}`);
       }
     } else {
       alert('Erro ao fazer upload da imagem do Hero.');
