@@ -1,28 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import heroDefault from '../assets/hero.png';
 
 interface HeroProps {
   className?: string;
 }
 
 export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
-  const [heroUrl, setHeroUrl] = useState('/src/assets/hero.png');
+  const [heroUrl, setHeroUrl] = useState(heroDefault);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const fetchHero = async () => {
       const { data } = await supabase.from('settings').select('value').eq('id', 'hero_image_url').single();
-      if (data) setHeroUrl(data.value);
+      if (data && data.value) {
+        setHeroUrl(data.value);
+      }
     };
     fetchHero();
   }, []);
 
   return (
     <section className={`relative mb-12 flex h-[300px] items-center justify-center overflow-hidden sm:h-[353px] ${className}`}>
-      <div className="absolute inset-0 bg-surface-container-high">
+      <div className="absolute inset-0 bg-surface-container-high transition-colors duration-700">
         <img 
           alt="Mivie jewelry hero" 
-          className="w-full h-full object-cover mix-blend-multiply opacity-50" 
+          className={`w-full h-full object-cover mix-blend-multiply transition-opacity duration-1000 ${
+            isLoaded ? 'opacity-50' : 'opacity-0'
+          }`}
           src={heroUrl}
+          loading="eager"
+          onLoad={() => setIsLoaded(true)}
+          style={{ fetchPriority: 'high' } as any}
         />
       </div>
       

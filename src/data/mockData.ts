@@ -20,6 +20,7 @@ export const CATEGORIES = [
   { id: 'rings', label: 'Anéis' },
   { id: 'earrings', label: 'Brincos' },
   { id: 'necklaces', label: 'Colares' },
+  { id: 'bracelets', label: 'Pulseiras' },
   { id: 'silver925', label: 'Prata 925' },
   { id: 'goldplated', label: 'Banhados' },
 ];
