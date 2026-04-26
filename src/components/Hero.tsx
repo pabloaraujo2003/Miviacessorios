@@ -28,7 +28,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
       
       <div className="relative z-10 space-y-4 px-6 text-center">
         <p className="font-body text-xs tracking-[0.3em] text-on-surface-variant uppercase">
-          Silver Curation
+          Nova Coleção
         </p>
         <h2 className="font-headline italic text-3xl text-on-surface sm:text-4xl md:text-5xl">
           Elegância em cada detalhe
