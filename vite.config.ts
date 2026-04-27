@@ -7,20 +7,16 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-icons': ['lucide-react'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('react')) return 'vendor-react';
+            if (id.includes('@supabase')) return 'vendor-supabase';
+            return 'vendor';
+          }
         },
       },
     },
-    chunkSizeWarningLimit: 600,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    chunkSizeWarningLimit: 1000,
   },
 })

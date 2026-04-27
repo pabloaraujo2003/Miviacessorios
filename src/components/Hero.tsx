@@ -38,7 +38,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
             src={heroUrl}
             loading="eager"
             decoding="async"
-            fetchpriority="high"
+            fetchPriority="high"
             onLoad={() => setIsLoaded(true)}
           />
         </div>
