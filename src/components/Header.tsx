@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, ShoppingBag } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/appContextValue';
 
 interface HeaderProps {
   className?: string;

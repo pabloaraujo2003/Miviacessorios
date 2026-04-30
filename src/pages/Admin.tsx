@@ -1,12 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { supabase, hasSupabaseKeys } from '../lib/supabase';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase, hasSupabaseKeys, mapProductRecord } from '../lib/supabase';
 import { Header } from '../components/Header';
 import { BottomNavBar } from '../components/BottomNavBar';
 import type { Product } from '../data/mockData';
 import { Trash2, Edit2, UploadCloud, Plus, LogOut, KeyRound } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
+interface ProductFormData {
+  name: string;
+  category: string;
+  price: string;
+  imageUrl: string;
+  collectionId: string;
+  features: string;
+  isBundle: boolean;
+}
+
+interface BundledItemFormData {
+  id: string;
+  name: string;
+  price: string;
+}
+
+interface ProductPayload {
+  name: string;
+  category: string;
+  price: string;
+  imageUrl: string;
+  collectionId: string;
+  features: string[];
+  isBundle: boolean;
+  bundledProducts: NonNullable<Product['bundledProducts']>;
+}
+
 export const Admin: React.FC = () => {
+  const isMountedRef = useRef(true);
+
   // Auth State
   const [session, setSession] = useState<Session | null>(null);
   const [authEmail, setAuthEmail] = useState('');
@@ -22,7 +51,7 @@ export const Admin: React.FC = () => {
   // Form state
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState('');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     category: 'rings',
     price: '',
@@ -31,43 +60,106 @@ export const Admin: React.FC = () => {
     features: '',
     isBundle: false
   });
-  const [bundledItems, setBundledItems] = useState<{id: string, name: string, price: string}[]>([]);
+  const [bundledItems, setBundledItems] = useState<BundledItemFormData[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [heroImageUrl, setHeroImageUrl] = useState('');
   const [uploadingHero, setUploadingHero] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsSessionChecked(true);
-    });
+  const fetchProducts = useCallback(async (signal?: AbortSignal): Promise<void> => {
+    await Promise.resolve();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setIsSessionChecked(true);
-    });
+    if (!isMountedRef.current) {
+      return;
+    }
 
-    fetchHeroImage();
+    setLoading(true);
+    if (!hasSupabaseKeys) {
+      setLoading(false);
+      return;
+    }
 
-    return () => subscription.unsubscribe();
+    const query = supabase.from('products').select('*');
+    const { data, error } = signal ? await query.abortSignal(signal) : await query;
+    if (signal?.aborted || !isMountedRef.current) {
+      return;
+    }
+
+    if (!error && data) {
+      setProducts(data.map(mapProductRecord).filter((product): product is Product => product !== null));
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (session) {
-      fetchProducts();
+    isMountedRef.current = true;
+    const abortController = new AbortController();
+
+    const initializeSession = async (): Promise<void> => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!isMountedRef.current || abortController.signal.aborted) {
+        return;
+      }
+      setSession(currentSession);
+      setIsSessionChecked(true);
+    };
+
+    const fetchHeroImage = async (): Promise<void> => {
+      if (!hasSupabaseKeys) {
+        return;
+      }
+
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('id', 'hero_image_url')
+        .abortSignal(abortController.signal)
+        .single();
+
+      if (!isMountedRef.current || abortController.signal.aborted) {
+        return;
+      }
+
+      if (data && typeof data.value === 'string') {
+        setHeroImageUrl(data.value);
+      }
+    };
+
+    void initializeSession();
+    void fetchHeroImage();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (!isMountedRef.current) {
+        return;
+      }
+      setSession(currentSession);
+      setIsSessionChecked(true);
+    });
+
+    return () => {
+      isMountedRef.current = false;
+      abortController.abort();
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!session) {
+      return;
     }
-  }, [session]);
 
-  const fetchHeroImage = async () => {
-    const { data } = await supabase.from('settings').select('value').eq('id', 'hero_image_url').single();
-    if (data) setHeroImageUrl(data.value);
-  };
+    const abortController = new AbortController();
+    queueMicrotask(() => {
+      void fetchProducts(abortController.signal);
+    });
 
-  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !hasSupabaseKeys) return;
-    const file = e.target.files[0];
+    return () => abortController.abort();
+  }, [fetchProducts, session]);
+
+  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.item(0);
+    if (!file || !hasSupabaseKeys) return;
     const fileExt = file.name.split('.').pop();
     const fileName = `hero_${Math.random()}.${fileExt}`;
     const filePath = `mivie/${fileName}`;
@@ -84,7 +176,9 @@ export const Admin: React.FC = () => {
         .upsert({ id: 'hero_image_url', value: newUrl }, { onConflict: 'id' });
       
       if (!updateError) {
-        setHeroImageUrl(newUrl);
+        if (isMountedRef.current) {
+          setHeroImageUrl(newUrl);
+        }
         alert('Foto do Hero atualizada com sucesso!');
       } else {
         console.error('Erro settings:', updateError);
@@ -93,10 +187,12 @@ export const Admin: React.FC = () => {
     } else {
       alert('Erro ao fazer upload da imagem do Hero.');
     }
-    setUploadingHero(false);
+    if (isMountedRef.current) {
+      setUploadingHero(false);
+    }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsAuthLoading(true);
     setAuthError('');
@@ -106,61 +202,43 @@ export const Admin: React.FC = () => {
       password: authPassword,
     });
 
+    if (!isMountedRef.current) {
+      return;
+    }
+
     if (error) {
       setAuthError(error.message);
     }
     setIsAuthLoading(false);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     await supabase.auth.signOut();
   };
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    if (!hasSupabaseKeys) {
-      setLoading(false);
-      return; 
-    }
-
-    const { data, error } = await supabase.from('products').select('*');
-    if (!error && data) {
-      // Map database columns to the interface if they differ in case
-      const mappedData = data.map((p: any) => ({
-        ...p,
-        imageUrl: p.imageUrl,
-        collectionId: p.collectionId,
-        isBundle: p.isBundle,
-        bundledProducts: p.bundledProducts
-      }));
-      setProducts(mappedData as Product[]);
-    }
-    setLoading(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value, type } = e.target;
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
-    setFormData({ ...formData, [name]: val });
+    setFormData(prev => ({ ...prev, [name]: val }));
   };
 
-  const addBundledItem = () => {
-    setBundledItems([...bundledItems, { id: crypto.randomUUID(), name: '', price: '' }]);
+  const addBundledItem = (): void => {
+    setBundledItems(prev => [...prev, { id: crypto.randomUUID(), name: '', price: '' }]);
   };
 
-  const updateBundledItem = (index: number, field: 'name' | 'price', value: string) => {
-    const newItems = [...bundledItems];
-    newItems[index][field] = value;
-    setBundledItems(newItems);
+  const updateBundledItem = (index: number, field: 'name' | 'price', value: string): void => {
+    setBundledItems(prev => prev.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, [field]: value } : item
+    )));
   };
 
-  const removeBundledItem = (index: number) => {
-    setBundledItems(bundledItems.filter((_, i) => i !== index));
+  const removeBundledItem = (index: number): void => {
+    setBundledItems(prev => prev.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !hasSupabaseKeys) return;
-    const file = e.target.files[0];
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.item(0);
+    if (!file || !hasSupabaseKeys) return;
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `mivie/${fileName}`;
@@ -170,14 +248,18 @@ export const Admin: React.FC = () => {
 
     if (!uploadError) {
       const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
-      setFormData(prev => ({ ...prev, imageUrl: data.publicUrl }));
+      if (isMountedRef.current) {
+        setFormData(prev => ({ ...prev, imageUrl: data.publicUrl }));
+      }
     } else {
       alert('Erro ao fazer upload da imagem.');
     }
-    setUploadingImage(false);
+    if (isMountedRef.current) {
+      setUploadingImage(false);
+    }
   };
 
-  const startEdit = (product: Product) => {
+  const startEdit = (product: Product): void => {
     setIsEditing(true);
     setCurrentId(product.id);
     setFormData({
@@ -186,13 +268,13 @@ export const Admin: React.FC = () => {
       price: product.price,
       imageUrl: product.imageUrl,
       collectionId: product.collectionId || '',
-      features: product.features.join(', '),
+      features: product.features?.join(', ') ?? '',
       isBundle: product.isBundle || false
     });
-    setBundledItems(product.bundledProducts ? product.bundledProducts.map(p => ({ id: p.id, name: p.name, price: p.price })) : []);
+    setBundledItems(product.bundledProducts?.map(p => ({ id: p.id, name: p.name, price: p.price })) ?? []);
   };
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setIsEditing(false);
     setCurrentId('');
     setFormData({ 
@@ -207,23 +289,24 @@ export const Admin: React.FC = () => {
     setBundledItems([]);
   };
 
-  const submitForm = async (e: React.FormEvent) => {
+  const submitForm = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!hasSupabaseKeys) return;
+    const features = formData.features.split(',').map(f => f.trim()).filter(Boolean);
 
-    const payload = {
+    const payload: ProductPayload = {
       name: formData.name,
       category: formData.category,
       price: formData.price,
       imageUrl: formData.imageUrl,
       collectionId: formData.collectionId,
-      features: formData.features.split(',').map(f => f.trim()),
+      features,
       isBundle: formData.isBundle,
       bundledProducts: formData.isBundle ? bundledItems.map(item => ({
         id: item.id,
         name: item.name,
         price: item.price,
-        features: formData.features.split(',').map(f => f.trim())
+        features
       })) : []
     };
 
@@ -243,15 +326,25 @@ export const Admin: React.FC = () => {
       }
     }
     
+    if (!isMountedRef.current) {
+      return;
+    }
+
     resetForm();
-    fetchProducts();
+    void fetchProducts();
     alert('Produto salvo com sucesso!');
   };
 
-  const deleteProduct = async (id: string) => {
+  const deleteProduct = async (id: string): Promise<void> => {
+    if (!id) {
+      return;
+    }
+
     if (confirm("Deseja mesmo excluir esta jóia do catálogo?") && hasSupabaseKeys) {
       await supabase.from('products').delete().eq('id', id);
-      fetchProducts();
+      if (isMountedRef.current) {
+        void fetchProducts();
+      }
     }
   };
 
@@ -279,8 +372,9 @@ export const Admin: React.FC = () => {
                 </div>
               )}
               <div>
-                <label className="block font-label text-xs tracking-wider mb-2">E-MAIL</label>
+                <label htmlFor="admin-email" className="block font-label text-xs tracking-wider mb-2">E-MAIL</label>
                 <input 
+                  id="admin-email"
                   required 
                   type="email" 
                   value={authEmail} 
@@ -289,8 +383,9 @@ export const Admin: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block font-label text-xs tracking-wider mb-2">SENHA SECRETA</label>
+                <label htmlFor="admin-password" className="block font-label text-xs tracking-wider mb-2">SENHA SECRETA</label>
                 <input 
+                  id="admin-password"
                   required 
                   type="password" 
                   value={authPassword} 
@@ -324,6 +419,7 @@ export const Admin: React.FC = () => {
           <h1 className="font-headline text-2xl sm:text-3xl">Painel Administrativo Mivie</h1>
           <button 
             onClick={handleLogout}
+            type="button"
             className="flex items-center gap-2 text-xs font-label tracking-widest uppercase text-on-surface-variant hover:text-error transition-colors"
           >
             <LogOut className="w-4 h-4" /> Desconectar
@@ -335,7 +431,9 @@ export const Admin: React.FC = () => {
           <h2 className="font-headline text-xl mb-4">Banner do Hero (Página Inicial)</h2>
           <div className="flex flex-col md:flex-row gap-8 items-start">
             <div className="w-full md:w-1/2 aspect-[21/9] bg-surface-variant overflow-hidden rounded-sm relative">
-              <img src={heroImageUrl} className="w-full h-full object-cover" alt="Hero Current" />
+              {heroImageUrl && (
+                <img src={heroImageUrl} className="w-full h-full object-cover" alt="Banner atual da página inicial" />
+              )}
               {uploadingHero && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <span className="text-white font-label text-xs tracking-widest animate-pulse">ATUALIZANDO...</span>
@@ -347,7 +445,7 @@ export const Admin: React.FC = () => {
               <label className="inline-flex items-center gap-2 bg-primary text-on-primary px-6 py-3 text-xs font-label uppercase tracking-widest cursor-pointer hover:bg-primary-dim transition-colors">
                 <UploadCloud className="w-4 h-4" /> 
                 {uploadingHero ? 'Enviando...' : 'Trocar Foto do Hero'}
-                <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} disabled={uploadingHero} />
+                <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} disabled={uploadingHero} aria-label="Enviar foto do hero" />
               </label>
             </div>
           </div>
@@ -363,8 +461,8 @@ export const Admin: React.FC = () => {
                 <label className="block font-label text-xs tracking-wider mb-1">FOTO DO PRODUTO</label>
                 {formData.imageUrl ? (
                   <div className="relative mb-2">
-                     <img src={formData.imageUrl} className="w-full h-40 object-cover rounded-sm grayscale" alt="Preview"/>
-                     <button type="button" onClick={() => setFormData({...formData, imageUrl: ''})} className="absolute top-2 right-2 bg-error text-on-error p-1 rounded-full"><Trash2 className="w-3 h-3"/></button>
+                     <img src={formData.imageUrl} className="w-full h-40 object-cover rounded-sm grayscale" alt={`Prévia de ${formData.name || 'produto'}`}/>
+                     <button type="button" aria-label="Remover foto do produto" onClick={() => setFormData(prev => ({...prev, imageUrl: ''}))} className="absolute top-2 right-2 bg-error text-on-error p-1 rounded-full"><Trash2 className="w-3 h-3"/></button>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center border-2 border-dashed border-outline-variant rounded-sm h-32 cursor-pointer hover:bg-surface-variant/30 transition-colors">
@@ -374,24 +472,24 @@ export const Admin: React.FC = () => {
                         <span className="font-body text-xs text-outline">Fazer upload no Storage</span>
                       </>
                     )}
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} />
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} aria-label="Enviar foto do produto" />
                   </label>
                 )}
               </div>
 
               <div>
-                <label className="block font-label text-xs tracking-wider mb-1">NOME DA JÓIA</label>
-                <input required type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+                <label htmlFor="product-name" className="block font-label text-xs tracking-wider mb-1">NOME DA JÓIA</label>
+                <input id="product-name" required type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-label text-xs tracking-wider mb-1">PREÇO (R$)</label>
-                  <input required placeholder="R$ 150,00" type="text" name="price" value={formData.price} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+                  <label htmlFor="product-price" className="block font-label text-xs tracking-wider mb-1">PREÇO (R$)</label>
+                  <input id="product-price" required placeholder="R$ 150,00" type="text" name="price" value={formData.price} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
                 </div>
                 <div>
-                   <label className="block font-label text-xs tracking-wider mb-1">CATEGORIA</label>
-                   <select name="category" value={formData.category} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none">
+                   <label htmlFor="product-category" className="block font-label text-xs tracking-wider mb-1">CATEGORIA</label>
+                   <select id="product-category" name="category" value={formData.category} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none">
                      <option value="rings">Anéis</option>
                      <option value="earrings">Brincos</option>
                      <option value="necklaces">Colares</option>
@@ -401,8 +499,8 @@ export const Admin: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-label text-xs tracking-wider mb-1">TAGS/FEATURES (Separados por vírgula)</label>
-                <input required placeholder="Ex: Prata 925, Esculpido" type="text" name="features" value={formData.features} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+                <label htmlFor="product-features" className="block font-label text-xs tracking-wider mb-1">TAGS/FEATURES (Separados por vírgula)</label>
+                <input id="product-features" required placeholder="Ex: Prata 925, Esculpido" type="text" name="features" value={formData.features} onChange={handleInputChange} className="w-full bg-surface border border-outline-variant px-3 py-2 text-sm focus:border-primary focus:outline-none" />
               </div>
 
               <div className="flex items-center gap-2 py-2">
@@ -423,6 +521,7 @@ export const Admin: React.FC = () => {
                     <label className="block font-label text-xs tracking-wider">PRODUTOS NA FOTO</label>
                     <button 
                       type="button" 
+                      aria-label="Adicionar item ao conjunto"
                       onClick={addBundledItem}
                       className="text-[0.6rem] font-label uppercase tracking-widest text-primary hover:underline"
                     >
@@ -434,12 +533,14 @@ export const Admin: React.FC = () => {
                     <div key={item.id} className="flex gap-2 items-start bg-surface-variant/20 p-2 rounded-sm relative group">
                       <div className="flex-1 space-y-2">
                         <input 
+                          aria-label={`Nome do item ${index + 1}`}
                           placeholder="Nome do Item" 
                           value={item.name} 
                           onChange={(e) => updateBundledItem(index, 'name', e.target.value)}
                           className="w-full bg-surface border border-outline-variant px-2 py-1 text-xs focus:border-primary focus:outline-none"
                         />
                         <input 
+                          aria-label={`Preço do item ${index + 1}`}
                           placeholder="Preço (Ex: R$ 89,00)" 
                           value={item.price} 
                           onChange={(e) => updateBundledItem(index, 'price', e.target.value)}
@@ -448,6 +549,7 @@ export const Admin: React.FC = () => {
                       </div>
                       <button 
                         type="button" 
+                        aria-label={`Remover item ${item.name || index + 1}`}
                         onClick={() => removeBundledItem(index)}
                         className="text-error opacity-50 hover:opacity-100 transition-opacity p-1"
                       >
@@ -499,14 +601,14 @@ export const Admin: React.FC = () => {
                     {products.map(p => (
                       <tr key={p.id} className="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors">
                         <td className="py-3 px-2">
-                          <img src={p.imageUrl} className="w-12 h-12 object-cover grayscale rounded-sm" alt="produto" />
+                          <img src={p.imageUrl} className="w-12 h-12 object-cover grayscale rounded-sm" alt={p.name} />
                         </td>
                         <td className="py-3 px-2 font-headline">{p.name}</td>
                         <td className="py-3 px-2 font-body font-light">{p.price}</td>
                         <td className="py-3 px-2">
                           <div className="flex gap-4">
-                            <button onClick={() => startEdit(p)} className="text-on-surface-variant hover:text-primary transition-colors"><Edit2 className="w-4 h-4"/></button>
-                            <button onClick={() => deleteProduct(p.id)} className="text-on-surface-variant hover:text-error transition-colors"><Trash2 className="w-4 h-4"/></button>
+                            <button type="button" aria-label={`Editar ${p.name}`} onClick={() => startEdit(p)} className="text-on-surface-variant hover:text-primary transition-colors"><Edit2 className="w-4 h-4"/></button>
+                            <button type="button" aria-label={`Excluir ${p.name}`} onClick={() => deleteProduct(p.id)} className="text-on-surface-variant hover:text-error transition-colors"><Trash2 className="w-4 h-4"/></button>
                           </div>
                         </td>
                       </tr>
