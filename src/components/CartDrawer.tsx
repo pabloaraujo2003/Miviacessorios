@@ -1,34 +1,37 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { ShoppingBag, X, Plus, Trash2 } from 'lucide-react';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/appContextValue';
 import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
 
 interface CartDrawerProps {
   className?: string;
 }
 
-export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
-  const { cart, isCartOpen, toggleCart, removeFromCart, addToCart } = useAppContext();
+const SWIPE_CLOSE_THRESHOLD = 80;
 
-  // Convert R$ strings to numbers for summing. e.g "R$ 289,00" -> 289
-  const parsePrice = (priceStr: string) => {
+export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
+  const { cart, isCartOpen, toggleCart, closeCart, removeFromCart, addToCart } = useAppContext();
+
+  const touchStartX = useRef<number | null>(null);
+  const [dragX, setDragX] = useState(0);
+
+  const parsePrice = (priceStr: string): number => {
     const num = priceStr.replace('R$ ', '').replace('.', '').replace(',', '.');
     return parseFloat(num) || 0;
   };
 
-  const total = cart.reduce((acc, item) => acc + (parsePrice(item.price) * item.quantity), 0);
+  const total = cart.reduce((acc, item) => acc + (parsePrice(item.price) * Math.max(1, item.quantity)), 0);
   const formattedTotal = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const handleCheckout = () => {
+  const handleCheckout = (): void => {
+    if (cart.length === 0) return;
+
     if (!hasStoreWhatsappNumber) {
       window.alert('Configure o número da loja em VITE_STORE_WHATSAPP_NUMBER para finalizar pelo WhatsApp.');
       return;
     }
 
-    const itemLines = cart.map(
-      item => `- ${item.name} x${item.quantity} (${item.price})`
-    );
-
+    const itemLines = cart.map(item => `- ${item.name} x${item.quantity} (${item.price})`);
     const message = [
       'Oi! Vim pelo site da Mivi e quero fechar minha compra.',
       '',
@@ -44,25 +47,58 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleTouchStart = (e: React.TouchEvent): void => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent): void => {
+    if (touchStartX.current === null) return;
+    const delta = e.touches[0].clientX - touchStartX.current;
+    if (delta > 0) setDragX(delta);
+  };
+
+  const handleTouchEnd = (): void => {
+    if (dragX > SWIPE_CLOSE_THRESHOLD) {
+      closeCart();
+    }
+    setDragX(0);
+    touchStartX.current = null;
+  };
+
   if (!isCartOpen) return null;
+
+  const drawerOpacity = dragX > 0 ? Math.max(0.1, 1 - dragX / 300) : 1;
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
+      <div
+        aria-hidden="true"
         className="fixed inset-0 z-50 bg-[#101418]/28 backdrop-blur-sm transition-opacity"
-        onClick={toggleCart}
+        style={{ opacity: drawerOpacity }}
+        onClick={closeCart}
       />
 
-      {/* Drawer */}
-      <aside className={`fixed top-0 right-0 z-[60] flex h-full w-full max-w-md flex-col bg-surface-container-lowest px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))] shadow-2xl transition-transform duration-300 ease-in-out ${className}`}>
-        
+      <aside
+        aria-label="Sacola de compras"
+        aria-modal="true"
+        role="dialog"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: dragX > 0 ? `translateX(${dragX}px)` : undefined,
+          transition: dragX > 0 ? 'none' : 'transform 0.3s ease-in-out',
+        }}
+        className={`fixed top-0 right-0 z-[60] flex h-full w-full max-w-md flex-col bg-surface-container-lowest px-6 pb-28 pt-[max(1.5rem,env(safe-area-inset-top))] shadow-2xl ${className}`}
+      >
         <header className="flex justify-between items-center mb-8">
           <h2 className="font-headline text-2xl text-on-surface flex items-center gap-3">
             <ShoppingBag className="w-5 h-5 stroke-[1.5]" />
             Sua Sacola
           </h2>
-          <button 
+          <button
+            type="button"
+            aria-label="Fechar sacola"
             onClick={toggleCart}
             className="interactive-icon h-11 w-11 rounded-full text-on-surface-variant active:bg-black/5 active:text-on-surface dark:active:bg-white/10"
           >
@@ -79,20 +115,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
           ) : (
             cart.map(item => (
               <div key={item.id} className="flex gap-4 p-4 bg-surface rounded-md">
-                <img src={item.imageUrl} alt={item.name} className="interactive-media h-24 w-20 rounded-sm object-cover" />
+                <img src={item.imageUrl} alt={item.name} loading="lazy" className="interactive-media h-24 w-20 rounded-sm object-cover" />
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-headline text-lg">{item.name}</h3>
-                    <p className="font-label text-[0.65rem] tracking-wider text-outline uppercase">{item.features.join(' • ')}</p>
+                    <p className="font-label text-[0.65rem] tracking-wider text-outline uppercase">{(item.features ?? []).join(' • ')}</p>
                   </div>
                   <div className="flex justify-between items-end">
                     <span className="font-body text-sm font-light">{item.price}</span>
                     <div className="flex items-center gap-3 bg-surface-container rounded-full px-2 py-1">
-                      <button onClick={() => removeFromCart(item.id)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-error/10 active:text-error">
+                      <button type="button" aria-label={`Remover ${item.name} da sacola`} onClick={() => removeFromCart(item.id)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-error/10 active:text-error">
                         <Trash2 className="w-4 h-4 stroke-[1.5]" />
                       </button>
-                      <span className="font-body text-sm w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => addToCart(item)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-primary/10 active:text-primary">
+                      <span className="font-body text-sm w-4 text-center">{Math.max(1, item.quantity)}</span>
+                      <button type="button" aria-label={`Adicionar mais um ${item.name}`} onClick={() => addToCart(item)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-primary/10 active:text-primary">
                         <Plus className="w-4 h-4 stroke-[1.5]" />
                       </button>
                     </div>

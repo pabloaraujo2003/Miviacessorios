@@ -1,0 +1,19 @@
+{
+  "name": "Mivi Acessórios",
+  "short_name": "Mivi",
+  "description": "Joias artesanais de prata e banho de ouro.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2b3437",
+  "background_color": "#f8f9fa",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"]
+}

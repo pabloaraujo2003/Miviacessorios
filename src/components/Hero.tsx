@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { hasSupabaseKeys, supabase } from '../lib/supabase';
 
 interface HeroProps {
   className?: string;
@@ -10,17 +10,34 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchHero = async () => {
+    if (!hasSupabaseKeys) {
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    const fetchHero = async (): Promise<void> => {
       try {
-        const { data } = await supabase.from('settings').select('value').eq('id', 'hero_image_url').single();
-        if (data && data.value) {
+        const { data } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('id', 'hero_image_url')
+          .abortSignal(abortController.signal)
+          .single();
+
+        if (!abortController.signal.aborted && data && typeof data.value === 'string') {
           setHeroUrl(data.value);
         }
       } catch (error) {
-        console.error('Error fetching hero image:', error);
+        if (!abortController.signal.aborted) {
+          console.error('Error fetching hero image:', error);
+        }
       }
     };
-    fetchHero();
+
+    void fetchHero();
+
+    return () => abortController.abort();
   }, []);
 
   return (
@@ -40,6 +57,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
             decoding="async"
             fetchPriority="high"
             onLoad={() => setIsLoaded(true)}
+            onError={() => setIsLoaded(false)}
           />
         </div>
       )}
