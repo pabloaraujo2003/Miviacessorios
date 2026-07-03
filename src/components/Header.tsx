@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   };
 
   return (
-    <header className={`bg-[#f8f9fa]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl fixed top-0 w-full z-40 ${className}`}>
+    <header className={`bg-[#f8f9fa]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl fixed top-0 w-full z-40 border-b hairline ${className}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
         <button
           aria-label="Abrir menu"
@@ -25,11 +25,12 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         >
           <Menu className="w-6 h-6 stroke-[1.5]" />
         </button>
-        <h1 
+        <h1
           onClick={scrollToTop}
-          className="min-w-0 flex-1 cursor-pointer select-none truncate text-center text-sm font-light tracking-[0.18em] text-[#2b3437] dark:text-[#f8f9fa] font-headline sm:text-base md:text-xl md:tracking-[0.3em] active:opacity-70 transition-opacity"
+          className="min-w-0 flex-1 cursor-pointer select-none truncate text-center leading-none text-[#2b3437] dark:text-[#f8f9fa] active:opacity-70 transition-opacity"
         >
-          MIVI ACESSÓRIOS
+          <span className="block font-headline text-base font-light tracking-[0.32em] sm:text-lg md:text-xl md:tracking-[0.4em]">MIVI</span>
+          <span className="mt-1 block font-label text-[0.5rem] uppercase tracking-[0.45em] text-outline sm:text-[0.55rem]">Acessórios</span>
         </h1>
         <button 
           aria-label="Abrir sacola"

@@ -14,12 +14,20 @@ export const Saved: React.FC = () => {
       <Header />
 
       <main className="mx-auto max-w-7xl px-4 pb-32 pt-24 sm:px-6 md:pb-12 lg:px-8">
-        <section className="mb-12">
-          <h2 className="flex items-center gap-4 break-words font-headline text-3xl italic text-on-surface sm:text-4xl">
-            Meus Favoritos
-            <Heart className="w-8 h-8 stroke-[1.5]" />
-          </h2>
-          <div className="h-px w-12 bg-primary opacity-40 mt-6" />
+        <section className="mb-14">
+          <p className="animate-fade-up font-label text-[0.65rem] tracking-[0.35em] text-on-surface-variant uppercase">
+            Nº 03 <span className="mx-2 opacity-40">—</span> Salvos
+          </p>
+          <div className="animate-fade-up mt-6 flex items-baseline justify-between border-b hairline pb-6" style={{ animationDelay: '100ms' }}>
+            <h2 className="break-words font-headline text-3xl italic text-on-surface sm:text-4xl">
+              Meus Favoritos
+            </h2>
+            {!isLoadingProducts && savedItems.length > 0 && (
+              <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">
+                {savedItems.length} {savedItems.length === 1 ? 'peça' : 'peças'}
+              </span>
+            )}
+          </div>
         </section>
 
         {isLoadingProducts ? (
@@ -27,8 +35,12 @@ export const Saved: React.FC = () => {
             {Array.from({ length: 2 }, (_, i) => <SkeletonCard key={i} index={i} />)}
           </section>
         ) : savedItems.length === 0 ? (
-          <div className="flex justify-center items-center h-48 opacity-50">
-            Você ainda não curtiu nenhuma joia. Explore a coleção!
+          <div className="animate-fade-up border-y hairline py-20 text-center">
+            <Heart className="mx-auto mb-5 h-7 w-7 stroke-1 text-outline-variant" />
+            <p className="font-headline italic text-xl text-on-surface-variant">Nenhuma peça guardada ainda</p>
+            <p className="mt-3 font-label text-[0.65rem] uppercase tracking-[0.25em] text-outline">
+              Toque no coração de uma joia para guardá-la aqui
+            </p>
           </div>
         ) : (
           <section className="grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2">

@@ -8,28 +8,46 @@ CREATE TABLE IF NOT EXISTS public.products (
     "collectionId" TEXT,
     "features" TEXT[] NOT NULL DEFAULT '{}',
     "isBundle" BOOLEAN DEFAULT false,
-    "bundledProducts" JSONB DEFAULT '[]'
+    "bundledProducts" JSONB DEFAULT '[]',
+    -- NULL = estoque não controlado (sempre vendável); número = quantidade disponível
+    stock INTEGER CHECK (stock IS NULL OR stock >= 0)
 );
 
--- 2. Desabilitar restrições RLS (Row Level Security) para o protótipo público avançar, ou crie as politicas de ALLOW caso queira manter habilitado. 
--- *Recomendável mudar para restrito (authenticated) em produção.
-ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
--- Se preferir RLS ativado, rode as 2 linhas abaixo:
--- ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
--- CREATE POLICY "Permite acesso publico" ON public.products FOR ALL USING (true);
+-- Migração para bancos já existentes (execute uma vez no SQL Editor do Supabase):
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock INTEGER CHECK (stock IS NULL OR stock >= 0);
+
+-- 2. RLS: leitura pública (loja), escrita apenas para usuários autenticados (admin)
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Leitura publica de produtos" ON public.products;
+CREATE POLICY "Leitura publica de produtos"
+  ON public.products FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Escrita autenticada de produtos" ON public.products;
+CREATE POLICY "Escrita autenticada de produtos"
+  ON public.products FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
 
 
 -- 3. Criação automática do Bucket de Arquivos para Fotos (Se der erro execute manualmente no menu Storage do Supabase)
 INSERT INTO storage.buckets (id, name, public) VALUES ('product-images', 'product-images', true)
 ON CONFLICT DO NOTHING;
 
--- 4. Setar o bucket de imagens como Público para download
-CREATE POLICY "Avatar images are publicly accessible."
+-- 4. Bucket público para leitura; upload apenas autenticado
+DROP POLICY IF EXISTS "Avatar images are publicly accessible." ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can upload an avatar." ON storage.objects;
+DROP POLICY IF EXISTS "Leitura publica de imagens" ON storage.objects;
+CREATE POLICY "Leitura publica de imagens"
   ON storage.objects FOR SELECT
   USING ( bucket_id = 'product-images' );
 
-CREATE POLICY "Anyone can upload an avatar."
+DROP POLICY IF EXISTS "Upload autenticado de imagens" ON storage.objects;
+CREATE POLICY "Upload autenticado de imagens"
   ON storage.objects FOR INSERT
+  TO authenticated
   WITH CHECK ( bucket_id = 'product-images' );
 
 -- 5. Tabela de Configurações (Hero, etc)
@@ -39,7 +57,19 @@ CREATE TABLE IF NOT EXISTS public.settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-ALTER TABLE public.settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Leitura publica de settings" ON public.settings;
+CREATE POLICY "Leitura publica de settings"
+  ON public.settings FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Escrita autenticada de settings" ON public.settings;
+CREATE POLICY "Escrita autenticada de settings"
+  ON public.settings FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
 
 INSERT INTO public.settings (id, value) 
 VALUES ('hero_image_url', '/src/assets/hero.png')
