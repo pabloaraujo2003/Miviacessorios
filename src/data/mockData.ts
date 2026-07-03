@@ -6,6 +6,8 @@ export interface Product {
   imageUrl: string;
   collectionId?: string;
   features: string[];
+  /** null/undefined = estoque não controlado; número = quantidade disponível */
+  stock?: number | null;
   isBundle?: boolean;
   bundledProducts?: {
     id: string;
@@ -14,6 +16,17 @@ export interface Product {
     features: string[];
   }[];
 }
+
+export const matchesCategory = (product: Product, categoryId: string): boolean => {
+  if (categoryId === 'all') return true;
+  if (categoryId === 'silver925') {
+    return (product.features ?? []).some(f => f.toLowerCase().includes('prata 925'));
+  }
+  if (categoryId === 'goldplated') {
+    return (product.features ?? []).some(f => f.toLowerCase().includes('banhado'));
+  }
+  return product.category === categoryId;
+};
 
 export const CATEGORIES = [
   { id: 'all', label: 'Todos' },
@@ -41,7 +54,8 @@ export const MOCK_PRODUCTS: Product[] = [
     category: 'earrings',
     price: 'R$ 175,00',
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAdvtuZngiYnPrwaMOmuBFW6t3LiAVnGC9fu6KXqa5fCQPHkXQVsPx3zMfAbas875QXhETVzegdbkx6Rs1eI6BdUyo-2_U9A5NO_TmzHpAKOtZ9Ok8s0IqqXDqwWcBp_t1nQKazc7c-x7lUBRr4SPy6i6n1SDssZ6LSECuIrxE2OAogH3mkYTTy8TWgYlc9O0eJwK5v9suX5o2ALNpwVOz8Ucb1kaLp_ciNXiA3AoZ1hi-PF77XkqlIocaeqgQlIAev-RWwdoOyu46i',
-    features: ['Prata 925', 'Polido']
+    features: ['Prata 925', 'Polido'],
+    stock: 2
   },
   {
     id: 'p-3',
@@ -57,6 +71,7 @@ export const MOCK_PRODUCTS: Product[] = [
     category: 'bracelets',
     price: 'R$ 510,00',
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuArcLMgUjjG3WmfPZz0IkhOIWoGcSOxQW1rCFNqczt72LrQiWCf7al5tP7cUXiisCELkogDFhPh80uL_pprjgMQnG905_YImD3L7Mr1IhZegwJrGA9XEYrlS_KdXZIyzYAkdmzPr4zfwP4trW1NZ1SdIN1FgPmTs518JsO1hjKq5P6D0SksLwJ4lI0iSnrL04dsLxIeafEvQy2kwyRnhWmFwwV6EwlfYSBsGEK-pIodoAE7PgKxo-H02RarSpBMJYBPHTg56zqSHneD',
-    features: ['Prata 925', 'Geométrico']
+    features: ['Prata 925', 'Geométrico'],
+    stock: 0
   }
 ];

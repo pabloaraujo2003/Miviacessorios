@@ -41,14 +41,14 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
   }, []);
 
   return (
-    <section className={`relative mb-12 flex h-[300px] items-center justify-center overflow-hidden sm:h-[353px] ${className}`}>
+    <section className={`relative mb-16 flex h-[300px] items-center justify-center overflow-hidden sm:h-[353px] ${className}`}>
       {/* Skeleton / Background Placeholder */}
-      <div className="absolute inset-0 bg-surface-container-high transition-colors duration-700 animate-pulse" />
-      
+      <div className={`absolute inset-0 bg-surface-container-high transition-colors duration-700 ${!isLoaded ? 'animate-pulse' : ''}`} />
+
       {heroUrl && (
         <div className="absolute inset-0">
-          <img 
-            alt="Mivie jewelry hero" 
+          <img
+            alt="Mivie jewelry hero"
             className={`w-full h-full object-cover mix-blend-multiply transition-opacity duration-700 ${
               isLoaded ? 'opacity-50' : 'opacity-0'
             }`}
@@ -61,15 +61,23 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
           />
         </div>
       )}
-      
-      <div className="relative z-10 space-y-4 px-6 text-center">
-        <p className="font-body text-xs tracking-[0.3em] text-on-surface-variant uppercase">
-          Nova Coleção
+
+      {/* Moldura capilar editorial */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-3 border hairline sm:inset-4" />
+
+      <div className="relative z-10 space-y-5 px-8 text-center">
+        <p className="animate-fade-up font-label text-[0.65rem] tracking-[0.35em] text-on-surface-variant uppercase">
+          Nº 01 <span className="mx-2 opacity-40">—</span> Nova Coleção
         </p>
-        <h2 className="font-headline italic text-3xl text-on-surface sm:text-4xl md:text-5xl">
-          Elegância em cada detalhe
+        <h2 className="animate-fade-up font-headline italic text-4xl leading-[1.1] text-on-surface sm:text-5xl md:text-6xl" style={{ animationDelay: '120ms' }}>
+          Elegância em
+          <br />
+          cada detalhe
         </h2>
-        <div className="h-px w-12 bg-primary mx-auto opacity-40"></div>
+        <div className="animate-line-grow h-px w-16 bg-primary mx-auto opacity-40" />
+        <p className="animate-fade-up font-label text-[0.6rem] tracking-[0.25em] text-outline uppercase" style={{ animationDelay: '240ms' }}>
+          Prata 925 · Feito à mão
+        </p>
       </div>
     </section>
   );

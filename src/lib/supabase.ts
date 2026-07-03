@@ -32,6 +32,7 @@ interface ProductRecord {
   features?: unknown;
   isBundle?: unknown;
   bundledProducts?: unknown;
+  stock?: unknown;
 }
 
 const toString = (value: unknown): string => (typeof value === 'string' ? value : '');
@@ -90,6 +91,9 @@ export const mapProductRecord = (record: unknown): Product | null => {
     imageUrl,
     collectionId: toString(productRecord.collectionId) || undefined,
     features: toStringArray(productRecord.features),
+    stock: typeof productRecord.stock === 'number' && productRecord.stock >= 0
+      ? Math.floor(productRecord.stock)
+      : null,
     isBundle: Boolean(productRecord.isBundle),
     bundledProducts: toBundledProducts(productRecord.bundledProducts),
   };

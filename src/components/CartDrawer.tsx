@@ -113,7 +113,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
               <p className="font-body font-light text-center">Sua sacola está vazia.</p>
             </div>
           ) : (
-            cart.map(item => (
+            cart.map(item => {
+              const isAtStockLimit = item.stock != null && Math.max(1, item.quantity) >= item.stock;
+              return (
               <div key={item.id} className="flex gap-4 p-4 bg-surface rounded-md">
                 <img src={item.imageUrl} alt={item.name} loading="lazy" className="interactive-media h-24 w-20 rounded-sm object-cover" />
                 <div className="flex-1 flex flex-col justify-between">
@@ -128,14 +130,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
                         <Trash2 className="w-4 h-4 stroke-[1.5]" />
                       </button>
                       <span className="font-body text-sm w-4 text-center">{Math.max(1, item.quantity)}</span>
-                      <button type="button" aria-label={`Adicionar mais um ${item.name}`} onClick={() => addToCart(item)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-primary/10 active:text-primary">
+                      <button type="button" aria-label={isAtStockLimit ? `Estoque máximo de ${item.name} atingido` : `Adicionar mais um ${item.name}`} disabled={isAtStockLimit} onClick={() => addToCart(item)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-primary/10 active:text-primary disabled:opacity-30 disabled:active:bg-transparent disabled:active:text-on-surface-variant">
                         <Plus className="w-4 h-4 stroke-[1.5]" />
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
 

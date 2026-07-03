@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Product } from '../data/mockData';
+import { CATEGORIES } from '../data/mockData';
 import { Heart, Plus, Share2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 
@@ -21,6 +22,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const productFeatures = product.features ?? [];
   const bundledProducts = product.bundledProducts ?? [];
   const hasBundleOptions = Boolean(product.isBundle && bundledProducts.length > 0);
+  const isOutOfStock = product.stock === 0;
+  const isLowStock = typeof product.stock === 'number' && product.stock > 0 && product.stock <= 3;
+  const indexLabel = String(index + 1).padStart(2, '0');
+  const categoryLabel = CATEGORIES.find(c => c.id === product.category)?.label ?? product.category;
 
   // Add asymmetric spacing for even items matching the original design
   const asymmetricClass = index % 2 !== 0 ? 'md:mt-24' : '';
@@ -41,6 +46,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   }, [isZoomed]);
 
   const handleAddClick = (): void => {
+    if (isOutOfStock) {
+      return;
+    }
     if (hasBundleOptions) {
       setShowBundleMenu(prev => !prev);
     } else {
@@ -83,22 +91,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <article className={`group ${asymmetricClass} ${className}`}>
+    <article
+      className={`group animate-fade-up ${asymmetricClass} ${className}`}
+      style={{ animationDelay: `${Math.min(index, 6) * 90}ms` }}
+    >
       <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
-        <img 
-          alt={product.name} 
+        <img
+          alt={product.name}
           aria-label={`Ampliar imagem de ${product.name}`}
           onClick={() => setIsZoomed(true)}
           onKeyDown={handleImageKeyDown}
           role="button"
           tabIndex={0}
-          className="interactive-media h-full w-full object-cover cursor-zoom-in" 
+          className={`interactive-media h-full w-full object-cover cursor-zoom-in duration-700 md:group-hover:scale-[1.04] ${isOutOfStock ? 'grayscale opacity-80' : ''}`}
           src={product.imageUrl}
         />
         
         {product.collectionId && (
           <div className="absolute top-4 left-4 bg-surface-container-highest px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
             {product.collectionId}
+          </div>
+        )}
+
+        {isOutOfStock && (
+          <div className="absolute top-4 right-4 bg-error text-on-error px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
+            Esgotado
+          </div>
+        )}
+
+        {isLowStock && (
+          <div className="absolute top-4 right-4 bg-surface-container-highest text-error px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
+            {product.stock === 1 ? 'Última unidade' : `Restam ${product.stock}`}
           </div>
         )}
 
@@ -171,7 +194,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
       
       <div className="mt-4 flex flex-col">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <p className="mb-2 flex items-baseline gap-2 font-label text-[0.6rem] uppercase tracking-[0.25em] text-outline">
+          <span className="font-body tabular-nums text-primary">{indexLabel}</span>
+          <span aria-hidden="true" className="h-px w-6 self-center bg-outline-variant/60" />
+          {categoryLabel}
+        </p>
+        <div className="mb-4 flex flex-col gap-3 border-b hairline pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1">
             <h3 className="break-words font-headline text-xl text-on-surface">
               {product.name}
@@ -180,11 +208,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {productFeatures.join(' • ')}
             </p>
           </div>
-          <span className="shrink-0 font-body text-lg font-light text-on-surface">
+          <span className={`shrink-0 font-body text-lg font-light ${isOutOfStock ? 'text-outline-variant line-through decoration-1' : 'text-on-surface'}`}>
             {product.price}
           </span>
         </div>
-        
+
         <div className="flex gap-2">
           <button
             type="button"
@@ -209,18 +237,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <Heart className={`w-5 h-5 ${saved ? 'fill-current' : ''} stroke-[1.5]`} />
           </button>
           
-          <button 
+          <button
             type="button"
             aria-expanded={hasBundleOptions ? showBundleMenu : undefined}
-            aria-label={hasBundleOptions ? `${showBundleMenu ? 'Fechar opções de' : 'Ver opções de'} ${product.name}` : `Adicionar ${product.name} à sacola`}
+            aria-label={isOutOfStock ? `${product.name} esgotado` : hasBundleOptions ? `${showBundleMenu ? 'Fechar opções de' : 'Ver opções de'} ${product.name}` : `Adicionar ${product.name} à sacola`}
+            disabled={isOutOfStock}
             onClick={handleAddClick}
             className={`interactive-surface flex min-w-0 flex-[3] items-center justify-center gap-2 py-3 text-on-primary transition-colors ${
-              showBundleMenu ? 'bg-surface-variant text-on-surface-variant' : 'bg-primary active:bg-primary-dim'
+              isOutOfStock
+                ? 'bg-surface-variant text-on-surface-variant cursor-not-allowed opacity-60'
+                : showBundleMenu ? 'bg-surface-variant text-on-surface-variant' : 'bg-primary active:bg-primary-dim'
             }`}
           >
-            <Plus className={`w-5 h-5 stroke-[1.5] transition-transform duration-300 ${showBundleMenu ? 'rotate-45' : ''}`} />
+            {!isOutOfStock && <Plus className={`w-5 h-5 stroke-[1.5] transition-transform duration-300 ${showBundleMenu ? 'rotate-45' : ''}`} />}
             <span className="truncate font-label text-[0.65rem] tracking-[0.15em] uppercase">
-              {product.isBundle ? (showBundleMenu ? 'Fechar Seleção' : 'Ver Opções') : 'Adicionar'}
+              {isOutOfStock ? 'Esgotado' : product.isBundle ? (showBundleMenu ? 'Fechar Seleção' : 'Ver Opções') : 'Adicionar'}
             </span>
           </button>
         </div>

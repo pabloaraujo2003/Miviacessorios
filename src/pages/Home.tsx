@@ -9,6 +9,7 @@ import { SkeletonCard } from '../components/SkeletonCard';
 import { useAppContext } from '../context/appContextValue';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { hasSupabaseKeys } from '../lib/supabase';
+import { matchesCategory } from '../data/mockData';
 import type { Product } from '../data/mockData';
 
 export const Home: React.FC = () => {
@@ -20,17 +21,10 @@ export const Home: React.FC = () => {
     enabled: hasSupabaseKeys,
   });
 
-  const filteredProducts = useMemo<Product[]>(() => selectedCategory === 'all'
-    ? products
-    : products.filter(p => {
-        if (selectedCategory === 'silver925') {
-          return (p.features ?? []).some(f => f.toLowerCase().includes('prata 925'));
-        }
-        if (selectedCategory === 'goldplated') {
-          return (p.features ?? []).some(f => f.toLowerCase().includes('banhado'));
-        }
-        return p.category === selectedCategory;
-      }), [products, selectedCategory]);
+  const filteredProducts = useMemo<Product[]>(
+    () => products.filter(p => matchesCategory(p, selectedCategory)),
+    [products, selectedCategory]
+  );
 
   const showSkeletons = isLoadingProducts || isRefreshing;
 
@@ -60,6 +54,15 @@ export const Home: React.FC = () => {
         <Hero />
         <CategoryFilter onSelectCategory={setSelectedCategory} />
 
+        <div className="mb-12 flex items-baseline justify-between">
+          <h2 className="font-headline italic text-2xl text-on-surface sm:text-3xl">A Coleção</h2>
+          {!showSkeletons && (
+            <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">
+              {filteredProducts.length} {filteredProducts.length === 1 ? 'peça' : 'peças'}
+            </span>
+          )}
+        </div>
+
         <section className="grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2">
           {showSkeletons
             ? Array.from({ length: 4 }, (_, i) => <SkeletonCard key={i} index={i} />)
@@ -68,6 +71,15 @@ export const Home: React.FC = () => {
               ))
           }
         </section>
+
+        {!showSkeletons && filteredProducts.length === 0 && (
+          <div className="animate-fade-up border-y hairline py-20 text-center">
+            <p className="font-headline italic text-xl text-on-surface-variant">Nenhuma peça nesta seleção</p>
+            <p className="mt-3 font-label text-[0.65rem] uppercase tracking-[0.25em] text-outline">
+              Explore outra categoria do índice
+            </p>
+          </div>
+        )}
 
         <Footer />
       </main>

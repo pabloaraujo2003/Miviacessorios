@@ -49,7 +49,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const addToCart = useCallback((product: Product) => {
-    if (!product.id) {
+    if (!product.id || product.stock === 0) {
       return;
     }
 
@@ -58,8 +58,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
+        const maxQuantity = existing.stock ?? Infinity;
         return prev.map(item =>
-          item.id === product.id ? { ...item, quantity: Math.max(1, item.quantity) + 1 } : item
+          item.id === product.id
+            ? { ...item, quantity: Math.min(Math.max(1, item.quantity) + 1, maxQuantity) }
+            : item
         );
       }
       return [...prev, { ...product, quantity: 1 }];

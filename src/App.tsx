@@ -21,6 +21,7 @@ function App() {
   return (
     <Router>
       <AppProvider>
+        <div aria-hidden="true" className="grain-overlay" />
         <CartDrawer />
         <MenuDrawer />
         <Suspense fallback={<PageLoader />}>
