@@ -19,6 +19,13 @@
     min-height: 100vh;
   }
 
+  /* iOS/Android dão zoom automático em campos focados com fonte < 16px */
+  input,
+  select,
+  textarea {
+    font-size: max(1rem, 1em);
+  }
+
   ::selection {
     background: #2b3437;
     color: #f8f9fa;
