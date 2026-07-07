@@ -16,7 +16,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   };
 
   return (
-    <header className={`bg-[#f8f9fa]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl fixed top-0 w-full z-40 border-b hairline ${className}`}>
+    <header className={`bg-[#f8f9fa]/95 dark:bg-[#1f1f1f]/95 backdrop-blur-md fixed top-0 w-full z-40 border-b hairline ${className}`}>
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
         <button
           aria-label="Abrir menu"

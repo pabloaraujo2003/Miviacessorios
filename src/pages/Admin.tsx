@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase, hasSupabaseKeys, mapProductRecord } from '../lib/supabase';
 import { Header } from '../components/Header';
 import { BottomNavBar } from '../components/BottomNavBar';
@@ -44,7 +44,7 @@ interface StatusMessage {
 const EMPTY_FORM: ProductFormData = {
   name: '',
   category: 'rings',
-  price: '',
+  price: 'R$ ',
   imageUrl: '',
   collectionId: '',
   features: '',
@@ -56,6 +56,12 @@ const INPUT_CLASS = 'w-full bg-surface border hairline px-4 py-3 text-base focus
 const LABEL_CLASS = 'block font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant mb-2';
 
 const categoryLabelOf = (id: string): string => CATEGORIES.find(c => c.id === id)?.label ?? id;
+
+const FEATURE_OPTIONS = ['Prata 925', 'Banhado a Ródio', 'Banhado a Ouro', 'Esculpido', 'Polido', 'Geométrico'];
+
+const parseFeatures = (value: string): string[] => value.split(',').map(f => f.trim()).filter(Boolean);
+
+const withCurrencyPrefix = (value: string): string => `R$ ${value.replace(/R\$\s*/g, '').trimStart()}`;
 
 export const Admin: React.FC = () => {
   const isMountedRef = useRef(true);
@@ -247,17 +253,32 @@ export const Admin: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
     const { name, value, type } = e.target;
-    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : (name === 'price' ? withCurrencyPrefix(value) : value);
     setFormData(prev => ({ ...prev, [name]: val }));
   };
 
+  const featureOptions = useMemo(() => {
+    const options = new Set(FEATURE_OPTIONS);
+    products.forEach(p => (p.features ?? []).forEach(f => options.add(f)));
+    parseFeatures(formData.features).forEach(f => options.add(f));
+    return [...options];
+  }, [products, formData.features]);
+
+  const toggleFeature = (feature: string): void => {
+    setFormData(prev => {
+      const current = parseFeatures(prev.features);
+      const next = current.includes(feature) ? current.filter(f => f !== feature) : [...current, feature];
+      return { ...prev, features: next.join(', ') };
+    });
+  };
+
   const addBundledItem = (): void => {
-    setBundledItems(prev => [...prev, { id: crypto.randomUUID(), name: '', price: '' }]);
+    setBundledItems(prev => [...prev, { id: crypto.randomUUID(), name: '', price: 'R$ ' }]);
   };
 
   const updateBundledItem = (index: number, field: 'name' | 'price', value: string): void => {
     setBundledItems(prev => prev.map((item, itemIndex) => (
-      itemIndex === index ? { ...item, [field]: value } : item
+      itemIndex === index ? { ...item, [field]: field === 'price' ? withCurrencyPrefix(value) : value } : item
     )));
   };
 
@@ -315,7 +336,11 @@ export const Admin: React.FC = () => {
   const submitForm = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!hasSupabaseKeys) return;
-    const features = formData.features.split(',').map(f => f.trim()).filter(Boolean);
+    const features = parseFeatures(formData.features);
+    if (features.length === 0) {
+      showStatus('Selecione ao menos uma tag', 'error');
+      return;
+    }
 
     const payload: ProductPayload = {
       name: formData.name,
@@ -593,8 +618,27 @@ export const Admin: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="product-features" className={LABEL_CLASS}>Tags (separadas por vírgula)</label>
-                <input id="product-features" required placeholder="Ex: Prata 925, Esculpido" type="text" name="features" value={formData.features} onChange={handleInputChange} className={INPUT_CLASS} />
+                <span className={LABEL_CLASS}>Tags (toque para selecionar)</span>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Tags do produto">
+                  {featureOptions.map(feature => {
+                    const isSelected = parseFeatures(formData.features).includes(feature);
+                    return (
+                      <button
+                        key={feature}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => toggleFeature(feature)}
+                        className={`mobile-tap-highlight touch-manipulation border px-3 py-2 font-label text-[0.6rem] uppercase tracking-[0.15em] transition-colors active:scale-95 ${
+                          isSelected
+                            ? 'border-primary bg-primary text-on-primary'
+                            : 'hairline bg-surface text-on-surface-variant'
+                        }`}
+                      >
+                        {feature}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <p className="font-body text-[0.7rem] font-light text-outline">
