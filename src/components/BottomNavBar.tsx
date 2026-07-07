@@ -22,7 +22,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
   return (
     <nav
       aria-label="Navegacao principal mobile"
-      className={`md:hidden fixed bottom-0 left-0 z-50 w-full rounded-t-[1.75rem] border-t border-black/5 bg-[#f8f9fa]/92 backdrop-blur-2xl shadow-[0px_-18px_50px_rgba(43,52,55,0.08)] dark:border-white/10 dark:bg-[#1A1A1A]/92 ${className}`}
+      className={`md:hidden fixed bottom-0 left-0 z-50 w-full rounded-t-[1.75rem] border-t border-black/5 bg-[#f8f9fa]/97 backdrop-blur-md shadow-[0px_-18px_50px_rgba(43,52,55,0.08)] dark:border-white/10 dark:bg-[#1f1f1f]/97 ${className}`}
     >
       <div className="mx-auto flex w-full max-w-7xl items-stretch gap-2 px-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3 sm:px-4">
       

@@ -76,7 +76,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
         </h2>
         <div className="animate-line-grow h-px w-16 bg-primary mx-auto opacity-40" />
         <p className="animate-fade-up font-label text-[0.6rem] tracking-[0.25em] text-outline uppercase" style={{ animationDelay: '240ms' }}>
-          Prata 925 · Feito à mão
+          Prata 925 · Banhados
         </p>
       </div>
     </section>

@@ -13,7 +13,7 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
       <div className="text-center space-y-6">
         <p className="font-headline italic text-3xl text-on-surface sm:text-4xl">Mivi</p>
         <p className="font-label text-[0.6rem] uppercase tracking-[0.3em] text-on-surface-variant">
-          Prata 925 · Banhados · Feito à mão
+          Prata 925 · Banhados
         </p>
 
         <div className="flex items-center justify-center gap-3" aria-hidden="true">
