@@ -679,7 +679,7 @@ export const Admin: React.FC = () => {
                           placeholder="Nome do Item"
                           value={item.name}
                           onChange={(e) => updateBundledItem(index, 'name', e.target.value)}
-                          className="w-full border hairline bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                          className="w-full border hairline bg-surface px-3 py-2 text-base focus:border-primary focus:outline-none"
                         />
                         <input
                           aria-label={`Preço do item ${index + 1}`}
@@ -687,7 +687,7 @@ export const Admin: React.FC = () => {
                           inputMode="decimal"
                           value={item.price}
                           onChange={(e) => updateBundledItem(index, 'price', e.target.value)}
-                          className="w-full border hairline bg-surface px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                          className="w-full border hairline bg-surface px-3 py-2 text-base focus:border-primary focus:outline-none"
                         />
                       </div>
                       <button
