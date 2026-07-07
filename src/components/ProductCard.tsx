@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import type { Product } from '../data/mockData';
 import { CATEGORIES } from '../data/mockData';
 import { Heart, Plus, Share2 } from 'lucide-react';
@@ -29,6 +30,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   // Add asymmetric spacing for even items matching the original design
   const asymmetricClass = index % 2 !== 0 ? 'md:mt-24' : '';
+  const closeZoom = React.useCallback(() => setIsZoomed(false), []);
+  const openZoom = React.useCallback(() => setIsZoomed(true), []);
 
   React.useEffect(() => {
     if (!isZoomed) {
@@ -37,13 +40,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
-        setIsZoomed(false);
+        closeZoom();
       }
     };
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isZoomed]);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeZoom, isZoomed]);
 
   const handleAddClick = (): void => {
     if (isOutOfStock) {
@@ -83,29 +91,60 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const handleImageKeyDown = (event: React.KeyboardEvent<HTMLImageElement>): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      setIsZoomed(true);
-    }
-  };
+  const zoomModal = isZoomed
+    ? createPortal(
+        <div
+          aria-modal="true"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 animate-in fade-in duration-300"
+          onClick={closeZoom}
+          role="dialog"
+        >
+          <button
+            aria-label="Fechar imagem ampliada"
+            type="button"
+            className="absolute right-4 top-4 z-[110] flex h-12 w-12 items-center justify-center text-white/80 transition-colors hover:text-white sm:right-6 sm:top-6"
+            onClick={(event) => {
+              event.stopPropagation();
+              closeZoom();
+            }}
+          >
+            <Plus className="h-8 w-8 rotate-45 stroke-[1.5]" />
+          </button>
+          <div className="flex h-full w-full items-center justify-center p-4 sm:p-8">
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="max-h-full max-w-full object-contain animate-in zoom-in-95 duration-500"
+              onClick={(event) => event.stopPropagation()}
+            />
+          </div>
+          <div className="pointer-events-none absolute bottom-8 left-0 right-0 text-center">
+            <p className="font-label text-[0.6rem] uppercase tracking-[0.3em] text-white/60">Toque para fechar</p>
+          </div>
+        </div>,
+        document.body
+      )
+    : null;
 
   return (
-    <article
-      className={`group animate-fade-up ${asymmetricClass} ${className}`}
-      style={{ animationDelay: `${Math.min(index, 6) * 90}ms` }}
-    >
-      <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
-        <img
-          alt={product.name}
-          aria-label={`Ampliar imagem de ${product.name}`}
-          onClick={() => setIsZoomed(true)}
-          onKeyDown={handleImageKeyDown}
-          role="button"
-          tabIndex={0}
-          className={`interactive-media h-full w-full object-cover cursor-zoom-in duration-700 md:group-hover:scale-[1.04] ${isOutOfStock ? 'grayscale opacity-80' : ''}`}
-          src={product.imageUrl}
-        />
+    <>
+      <article
+        className={`group animate-fade-up ${asymmetricClass} ${className}`}
+        style={{ animationDelay: `${Math.min(index, 6) * 90}ms` }}
+      >
+        <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
+          <button
+            type="button"
+            aria-label={`Ampliar imagem de ${product.name}`}
+            className="block h-full w-full cursor-zoom-in overflow-hidden text-left"
+            onClick={openZoom}
+          >
+            <img
+              alt={product.name}
+              className={`interactive-media h-full w-full object-cover duration-700 md:group-hover:scale-[1.04] ${isOutOfStock ? 'grayscale opacity-80' : ''}`}
+              src={product.imageUrl}
+            />
+          </button>
         
         {product.collectionId && (
           <div className="absolute top-4 left-4 bg-surface-container-highest px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
@@ -159,36 +198,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             >
               Adicionar Conjunto
             </button>
-          </div>
-        )}
-
-        {/* Zoom Modal */}
-        {isZoomed && (
-          <div 
-            aria-modal="true"
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 animate-in fade-in duration-300"
-            onClick={() => setIsZoomed(false)}
-            role="dialog"
-          >
-            <button 
-              aria-label="Fechar imagem ampliada"
-              type="button"
-              className="absolute top-6 right-6 text-white/70 hover:text-white p-2 z-[70]"
-              onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
-            >
-              <Plus className="w-8 h-8 rotate-45 stroke-[1.5]" />
-            </button>
-            <div className="relative w-full h-full p-4 flex items-center justify-center">
-              <img 
-                src={product.imageUrl} 
-                alt={product.name}
-                className="max-w-full max-h-full object-contain animate-in zoom-in-95 duration-500"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-            <div className="absolute bottom-10 left-0 right-0 text-center">
-              <p className="text-white/60 font-label text-[0.6rem] tracking-[0.3em] uppercase">Toque para fechar</p>
-            </div>
           </div>
         )}
       </div>
@@ -256,6 +265,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
       </div>
-    </article>
+      </article>
+      {zoomModal}
+    </>
   );
 };
