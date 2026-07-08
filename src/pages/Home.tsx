@@ -54,8 +54,7 @@ export const Home: React.FC = () => {
         <Hero />
         <CategoryFilter onSelectCategory={setSelectedCategory} />
 
-        <div className="mb-12 flex items-baseline justify-between">
-          <h2 className="font-headline italic text-2xl text-on-surface sm:text-3xl">A Coleção</h2>
+        <div className="mb-12 flex items-baseline justify-end">
           {!showSkeletons && (
             <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">
               {filteredProducts.length} {filteredProducts.length === 1 ? 'peça' : 'peças'}

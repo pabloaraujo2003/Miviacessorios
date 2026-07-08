@@ -67,7 +67,7 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
 
       <div className="relative z-10 space-y-5 px-8 text-center">
         <p className="animate-fade-up font-label text-[0.65rem] tracking-[0.35em] text-on-surface-variant uppercase">
-          Nº 01 <span className="mx-2 opacity-40">—</span> Nova Coleção
+          Nova Coleção
         </p>
         <h2 className="animate-fade-up font-headline italic text-4xl leading-[1.1] text-on-surface sm:text-5xl md:text-6xl" style={{ animationDelay: '120ms' }}>
           Elegância em
