@@ -8,7 +8,7 @@ import { ProductCard } from '../components/ProductCard';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { useAppContext } from '../context/appContextValue';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { hasSupabaseKeys } from '../lib/supabase';
+import { hasSupabaseKeys } from '../lib/env';
 import { matchesCategory } from '../data/mockData';
 import type { Product } from '../data/mockData';
 

@@ -4,6 +4,8 @@ export interface Product {
   category: string;
   price: string;
   imageUrl: string;
+  /** Cor dominante da foto (hex), usada como placeholder de fundo enquanto a imagem carrega */
+  dominantColor?: string;
   collectionId?: string;
   features: string[];
   /** null/undefined = estoque não controlado; número = quantidade disponível */

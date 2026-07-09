@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { supabase, hasSupabaseKeys, mapProductRecord } from '../lib/supabase';
-import { compressImage, optimizedImageUrl } from '../lib/images';
+import { supabase } from '../lib/supabase';
+import { hasSupabaseKeys } from '../lib/env';
+import { mapProductRecord } from '../lib/products';
+import { compressImage, optimizedImageUrl, dominantColorOf } from '../lib/images';
 import { Header } from '../components/Header';
 import { BottomNavBar } from '../components/BottomNavBar';
 import type { Product } from '../data/mockData';
@@ -13,6 +15,7 @@ interface ProductFormData {
   category: string;
   price: string;
   imageUrl: string;
+  dominantColor: string;
   collectionId: string;
   features: string;
   stock: string;
@@ -30,6 +33,7 @@ interface ProductPayload {
   category: string;
   price: string;
   imageUrl: string;
+  dominantColor: string;
   collectionId: string;
   features: string[];
   stock: number | null;
@@ -47,6 +51,7 @@ const EMPTY_FORM: ProductFormData = {
   category: 'rings',
   price: 'R$ ',
   imageUrl: '',
+  dominantColor: '',
   collectionId: '',
   features: '',
   stock: '',
@@ -294,7 +299,10 @@ export const Admin: React.FC = () => {
     if (!file || !hasSupabaseKeys) return;
 
     setUploadingImage(true);
-    const compressed = await compressImage(file, { maxDimension: 1600 });
+    const [compressed, dominantColor] = await Promise.all([
+      compressImage(file, { maxDimension: 1600 }),
+      dominantColorOf(file),
+    ]);
     const fileExt = compressed.type === 'image/webp' ? 'webp' : file.name.split('.').pop();
     const filePath = `mivie/${Math.random()}.${fileExt}`;
     const { error: uploadError } = await supabase.storage
@@ -304,7 +312,7 @@ export const Admin: React.FC = () => {
     if (!uploadError) {
       const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
       if (isMountedRef.current) {
-        setFormData(prev => ({ ...prev, imageUrl: data.publicUrl }));
+        setFormData(prev => ({ ...prev, imageUrl: data.publicUrl, dominantColor: dominantColor ?? '' }));
       }
     } else {
       showStatus('Erro ao enviar a imagem', 'error');
@@ -322,6 +330,7 @@ export const Admin: React.FC = () => {
       category: product.category,
       price: product.price,
       imageUrl: product.imageUrl,
+      dominantColor: product.dominantColor || '',
       collectionId: product.collectionId || '',
       features: product.features?.join(', ') ?? '',
       stock: product.stock != null ? String(product.stock) : '',
@@ -352,6 +361,7 @@ export const Admin: React.FC = () => {
       category: formData.category,
       price: formData.price,
       imageUrl: formData.imageUrl,
+      dominantColor: formData.dominantColor,
       collectionId: formData.collectionId,
       features,
       stock: formData.stock.trim() === '' ? null : Math.max(0, Math.floor(Number(formData.stock)) || 0),

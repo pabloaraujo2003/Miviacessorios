@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     category TEXT NOT NULL,
     price TEXT NOT NULL,
     "imageUrl" TEXT NOT NULL,
+    "dominantColor" TEXT,
     "collectionId" TEXT,
     "features" TEXT[] NOT NULL DEFAULT '{}',
     "isBundle" BOOLEAN DEFAULT false,
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 
 -- Migração para bancos já existentes (execute uma vez no SQL Editor do Supabase):
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock INTEGER CHECK (stock IS NULL OR stock >= 0);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS "dominantColor" TEXT;
 
 -- 2. RLS: leitura pública (loja), escrita apenas para usuários autenticados (admin)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;

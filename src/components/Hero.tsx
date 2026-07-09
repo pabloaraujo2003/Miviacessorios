@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { hasSupabaseKeys, supabase } from '../lib/supabase';
+import { hasSupabaseKeys } from '../lib/env';
+import { fetchHeroUrlRest, readCachedHeroUrl, writeCachedHeroUrl } from '../lib/products';
 import { optimizedImageUrl, optimizedSrcSet } from '../lib/images';
 
 interface HeroProps {
@@ -7,7 +8,10 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
-  const [heroUrl, setHeroUrl] = useState<string | null>(null);
+  // Stale-while-revalidate: mostra o hero da visita anterior de imediato
+  // (o Service Worker já tem essa imagem em cache, então o <img> resolve
+  // localmente) enquanto revalida a URL em background.
+  const [heroUrl, setHeroUrl] = useState<string | null>(() => (hasSupabaseKeys ? readCachedHeroUrl() : null));
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -18,21 +22,10 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
     const abortController = new AbortController();
 
     const fetchHero = async (): Promise<void> => {
-      try {
-        const { data } = await supabase
-          .from('settings')
-          .select('value')
-          .eq('id', 'hero_image_url')
-          .abortSignal(abortController.signal)
-          .single();
-
-        if (!abortController.signal.aborted && data && typeof data.value === 'string') {
-          setHeroUrl(data.value);
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error('Error fetching hero image:', error);
-        }
+      const url = await fetchHeroUrlRest(abortController.signal);
+      if (!abortController.signal.aborted && url) {
+        setHeroUrl(url);
+        writeCachedHeroUrl(url);
       }
     };
 

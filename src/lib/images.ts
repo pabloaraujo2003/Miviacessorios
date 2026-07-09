@@ -80,3 +80,40 @@ export const compressImage = async (file: File, { maxDimension, quality = 0.82 }
     return file;
   }
 };
+
+/**
+ * Cor média da imagem (hex), usada como `background-color` do card enquanto
+ * a foto real carrega — reduz o "flash" cinza percebido no primeiro paint.
+ * Decodifica em resolução mínima (16x16) só para amostrar a cor.
+ */
+export const dominantColorOf = async (file: File | Blob): Promise<string | undefined> => {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      bitmap.close();
+      return undefined;
+    }
+    context.drawImage(bitmap, 0, 0, 16, 16);
+    bitmap.close();
+
+    const { data } = context.getImageData(0, 0, 16, 16);
+    let r = 0, g = 0, b = 0;
+    const pixelCount = data.length / 4;
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+    }
+    r = Math.round(r / pixelCount);
+    g = Math.round(g / pixelCount);
+    b = Math.round(b / pixelCount);
+
+    return `#${[r, g, b].map(c => c.toString(16).padStart(2, '0')).join('')}`;
+  } catch {
+    return undefined;
+  }
+};
