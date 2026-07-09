@@ -4,6 +4,7 @@ import type { Product } from '../data/mockData';
 import { CATEGORIES } from '../data/mockData';
 import { Heart, Plus, Share2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
+import { optimizedImageUrl, optimizedSrcSet } from '../lib/images';
 
 interface ProductCardProps {
   product: Product;
@@ -112,8 +113,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
           <div className="flex h-full w-full items-center justify-center p-4 sm:p-8">
             <img
-              src={product.imageUrl}
+              src={optimizedImageUrl(product.imageUrl, 1600, 82)}
               alt={product.name}
+              decoding="async"
               className="max-h-full max-w-full object-contain animate-in zoom-in-95 duration-500"
               onClick={(event) => event.stopPropagation()}
             />
@@ -142,7 +144,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <img
               alt={product.name}
               className={`interactive-media h-full w-full object-cover duration-700 md:group-hover:scale-[1.04] ${isOutOfStock ? 'grayscale opacity-80' : ''}`}
-              src={product.imageUrl}
+              src={optimizedImageUrl(product.imageUrl, 640)}
+              srcSet={optimizedSrcSet(product.imageUrl, 640)}
+              sizes="(min-width: 768px) 50vw, 100vw"
+              loading={index < 2 ? 'eager' : 'lazy'}
+              fetchPriority={index === 0 ? 'high' : undefined}
+              decoding="async"
             />
           </button>
         

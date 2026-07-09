@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ShoppingBag, X, Plus, Trash2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
+import { optimizedImageUrl } from '../lib/images';
 
 interface CartDrawerProps {
   className?: string;
@@ -117,7 +118,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
               const isAtStockLimit = item.stock != null && Math.max(1, item.quantity) >= item.stock;
               return (
               <div key={item.id} className="flex gap-4 p-4 bg-surface rounded-md">
-                <img src={item.imageUrl} alt={item.name} loading="lazy" className="interactive-media h-24 w-20 rounded-sm object-cover" />
+                <img src={optimizedImageUrl(item.imageUrl, 160)} alt={item.name} loading="lazy" decoding="async" className="interactive-media h-24 w-20 rounded-sm object-cover" />
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <h3 className="font-headline text-lg">{item.name}</h3>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { hasSupabaseKeys, supabase } from '../lib/supabase';
+import { optimizedImageUrl, optimizedSrcSet } from '../lib/images';
 
 interface HeroProps {
   className?: string;
@@ -52,7 +53,9 @@ export const Hero: React.FC<HeroProps> = ({ className = '' }) => {
             className={`w-full h-full object-cover mix-blend-multiply transition-opacity duration-700 ${
               isLoaded ? 'opacity-50' : 'opacity-0'
             }`}
-            src={heroUrl}
+            src={optimizedImageUrl(heroUrl, 1280)}
+            srcSet={optimizedSrcSet(heroUrl, 1280)}
+            sizes="100vw"
             loading="eager"
             decoding="async"
             fetchPriority="high"

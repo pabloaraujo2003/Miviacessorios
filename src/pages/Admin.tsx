@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase, hasSupabaseKeys, mapProductRecord } from '../lib/supabase';
+import { compressImage, optimizedImageUrl } from '../lib/images';
 import { Header } from '../components/Header';
 import { BottomNavBar } from '../components/BottomNavBar';
 import type { Product } from '../data/mockData';
@@ -195,12 +196,14 @@ export const Admin: React.FC = () => {
   const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.item(0);
     if (!file || !hasSupabaseKeys) return;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `hero_${Math.random()}.${fileExt}`;
-    const filePath = `mivie/${fileName}`;
 
     setUploadingHero(true);
-    const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, file);
+    const compressed = await compressImage(file, { maxDimension: 1920 });
+    const fileExt = compressed.type === 'image/webp' ? 'webp' : file.name.split('.').pop();
+    const filePath = `mivie/hero_${Math.random()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, compressed, { contentType: compressed.type, cacheControl: '31536000' });
 
     if (!uploadError) {
       const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filePath);
@@ -289,12 +292,14 @@ export const Admin: React.FC = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.item(0);
     if (!file || !hasSupabaseKeys) return;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `mivie/${fileName}`;
 
     setUploadingImage(true);
-    const { error: uploadError } = await supabase.storage.from('product-images').upload(filePath, file);
+    const compressed = await compressImage(file, { maxDimension: 1600 });
+    const fileExt = compressed.type === 'image/webp' ? 'webp' : file.name.split('.').pop();
+    const filePath = `mivie/${Math.random()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filePath, compressed, { contentType: compressed.type, cacheControl: '31536000' });
 
     if (!uploadError) {
       const { data } = supabase.storage.from('product-images').getPublicUrl(filePath);
@@ -748,7 +753,7 @@ export const Admin: React.FC = () => {
               <ul className="divide-y divide-outline-variant/30">
                 {products.map(p => (
                   <li key={p.id} className="flex gap-4 py-4">
-                    <img src={p.imageUrl} className="h-20 w-16 shrink-0 rounded-sm object-cover" alt={p.name} />
+                    <img src={optimizedImageUrl(p.imageUrl, 160)} loading="lazy" decoding="async" className="h-20 w-16 shrink-0 rounded-sm object-cover" alt={p.name} />
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-headline text-base">{p.name}</p>

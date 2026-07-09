@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `mivi-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `mivi-images-${CACHE_VERSION}`;
 const API_CACHE = `mivi-api-${CACHE_VERSION}`;
@@ -29,6 +29,22 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Images — Cache First (inclui Supabase Storage e /_vercel/image).
+  // Precisa vir antes da regra do Supabase, senão as fotos do Storage
+  // caem no network-first e são baixadas de novo a cada visita.
+  if (request.destination === 'image') {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then(async cache => {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        const response = await fetch(request);
+        if (response.ok) cache.put(request, response.clone());
+        return response;
+      })
+    );
+    return;
+  }
+
   // Supabase API — Network First, fallback to cache (5min TTL)
   if (url.hostname.includes('supabase.co')) {
     event.respondWith(
@@ -41,20 +57,6 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => caches.match(request))
-    );
-    return;
-  }
-
-  // Images — Cache First (30 days)
-  if (request.destination === 'image') {
-    event.respondWith(
-      caches.open(IMAGE_CACHE).then(async cache => {
-        const cached = await cache.match(request);
-        if (cached) return cached;
-        const response = await fetch(request);
-        if (response.ok) cache.put(request, response.clone());
-        return response;
-      })
     );
     return;
   }
