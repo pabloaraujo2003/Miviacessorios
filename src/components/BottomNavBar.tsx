@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { Sparkles, Search, Heart, Shield } from 'lucide-react';
 
 interface BottomNavBarProps {
   className?: string;
@@ -33,7 +34,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
       >
         {({ isActive }) => (
           <>
-            <span className="material-symbols-outlined text-[1.35rem] leading-none" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>auto_awesome</span>
+            <Sparkles className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
             <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
               Colecao
             </span>
@@ -42,20 +43,16 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
       </NavLink>
       
       <NavLink to="/search" className={({ isActive }) => getLinkClasses(isActive)}>
-        {({ isActive }) => (
-          <>
-            <span className="material-symbols-outlined text-[1.35rem] leading-none" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>search</span>
-            <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
-              Buscar
-            </span>
-          </>
-        )}
+        <Search className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" />
+        <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
+          Buscar
+        </span>
       </NavLink>
       
       <NavLink to="/saved" className={({ isActive }) => getLinkClasses(isActive)}>
         {({ isActive }) => (
           <>
-            <span className="material-symbols-outlined text-[1.35rem] leading-none" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
+            <Heart className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
             <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
               Salvos
             </span>
@@ -66,7 +63,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
       <NavLink to="/admin" className={({ isActive }) => getLinkClasses(isActive)}>
         {({ isActive }) => (
           <>
-            <span className="material-symbols-outlined text-[1.35rem] leading-none" style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>shield_person</span>
+            <Shield className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
             <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
               Admin
             </span>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Shield } from 'lucide-react';
 
 interface FooterProps {
   className?: string;
@@ -30,7 +31,7 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
           to="/admin"
         >
           <span>ÁREA ADMINISTRATIVA</span>
-          <span className="material-symbols-outlined text-sm">shield_person</span>
+          <Shield className="h-3.5 w-3.5 stroke-[1.5]" />
         </Link>
       </div>
     </footer>
