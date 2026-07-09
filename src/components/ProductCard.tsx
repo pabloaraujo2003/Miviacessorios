@@ -134,7 +134,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className={`group animate-fade-up ${asymmetricClass} ${className}`}
         style={{ animationDelay: `${Math.min(index, 6) * 90}ms` }}
       >
-        <div className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low">
+        <div
+          className="relative mb-6 aspect-[4/5] overflow-hidden bg-surface-container-low"
+          style={product.dominantColor ? { backgroundColor: product.dominantColor } : undefined}
+        >
           <button
             type="button"
             aria-label={`Ampliar imagem de ${product.name}`}

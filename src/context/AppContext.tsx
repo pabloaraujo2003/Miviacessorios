@@ -2,7 +2,8 @@ import React, { useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Product } from '../data/mockData';
 import { MOCK_PRODUCTS } from '../data/mockData';
-import { supabase, hasSupabaseKeys, mapProductRecord } from '../lib/supabase';
+import { hasSupabaseKeys } from '../lib/env';
+import { fetchProductsRest, readCachedProducts, writeCachedProducts } from '../lib/products';
 import { AppContext } from './appContextValue';
 import type { CartItem } from './appContextValue';
 
@@ -11,8 +12,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [savedItems, setSavedItems] = useState<Product[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>(!hasSupabaseKeys ? MOCK_PRODUCTS : []);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(hasSupabaseKeys);
+  // Stale-while-revalidate: renderiza o catálogo da visita anterior
+  // instantaneamente (sem skeleton) enquanto revalida em background.
+  const cachedProducts = hasSupabaseKeys ? readCachedProducts() : null;
+  const [products, setProducts] = useState<Product[]>(
+    !hasSupabaseKeys ? MOCK_PRODUCTS : cachedProducts ?? []
+  );
+  const [isLoadingProducts, setIsLoadingProducts] = useState(hasSupabaseKeys && !cachedProducts);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Fetch products from database if keys are configured
@@ -25,17 +31,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     let isActive = true;
 
     const fetchProducts = async (): Promise<void> => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .abortSignal(abortController.signal);
+      const data = await fetchProductsRest(abortController.signal);
 
       if (!isActive || abortController.signal.aborted) {
         return;
       }
 
-      if (data && !error) {
-        setProducts(data.map(mapProductRecord).filter((product): product is Product => product !== null));
+      if (data) {
+        setProducts(data);
+        writeCachedProducts(data);
       }
       setIsLoadingProducts(false);
     };
@@ -106,13 +110,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .abortSignal(controller.signal);
+    const data = await fetchProductsRest(controller.signal);
     if (controller.signal.aborted) return;
-    if (data && !error) {
-      setProducts(data.map(mapProductRecord).filter((p): p is Product => p !== null));
+    if (data) {
+      setProducts(data);
+      writeCachedProducts(data);
     }
   }, []);
 
