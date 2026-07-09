@@ -6,6 +6,21 @@
       "destination": "/index.html"
     }
   ],
+  "images": {
+    "sizes": [160, 384, 640, 768, 960, 1080, 1280, 1600, 1920],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 2678400,
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "*.supabase.co"
+      },
+      {
+        "protocol": "https",
+        "hostname": "lh3.googleusercontent.com"
+      }
+    ]
+  },
   "headers": [
     {
       "source": "/assets/(.*)",
