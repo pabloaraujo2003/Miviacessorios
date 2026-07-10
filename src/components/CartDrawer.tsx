@@ -3,6 +3,7 @@ import { ShoppingBag, X, Plus, Trash2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
 import { optimizedImageUrl } from '../lib/images';
+import { generateOrderCode, saveOrder } from '../lib/orders';
 
 interface CartDrawerProps {
   className?: string;
@@ -15,6 +16,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
 
   const touchStartX = useRef<number | null>(null);
   const [dragX, setDragX] = useState(0);
+  const [customerName, setCustomerName] = useState('');
+  const [nameError, setNameError] = useState(false);
 
   const parsePrice = (priceStr: string): number => {
     const num = priceStr.replace('R$ ', '').replace('.', '').replace(',', '.');
@@ -27,25 +30,41 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
   const handleCheckout = (): void => {
     if (cart.length === 0) return;
 
+    const trimmedName = customerName.trim();
+    if (!trimmedName) {
+      setNameError(true);
+      return;
+    }
+
     if (!hasStoreWhatsappNumber) {
       window.alert('Configure o número da loja em VITE_STORE_WHATSAPP_NUMBER para finalizar pelo WhatsApp.');
       return;
     }
 
-    const itemLines = cart.map(item => `- ${item.name} x${item.quantity} (${item.price})`);
+    const orderCode = generateOrderCode();
+    const itemLines = cart.map(item => `• ${item.name} x${Math.max(1, item.quantity)} — ${item.price}`);
     const message = [
-      'Oi! Vim pelo site da Mivi e quero fechar minha compra.',
+      `Oi! Sou ${trimmedName} e vim pelo site da Mivi. Quero fechar minha compra 💍`,
       '',
-      'Itens do pedido:',
+      `*Pedido ${orderCode}*`,
       ...itemLines,
       '',
-      `Total estimado: ${formattedTotal}`,
+      `*Total estimado:* ${formattedTotal}`,
       '',
       'Quero confirmar valores, entrega e forma de pagamento.',
     ].join('\n');
 
     const whatsappUrl = `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+    // Melhor esforço: registra o pedido para a dona conseguir consultar depois.
+    // Não bloqueia a abertura do WhatsApp (que precisa ser síncrona ao clique).
+    void saveOrder({
+      code: orderCode,
+      customerName: trimmedName,
+      items: cart.map(item => ({ name: item.name, quantity: Math.max(1, item.quantity), price: item.price })),
+      total: formattedTotal,
+    });
   };
 
   const handleTouchStart = (e: React.TouchEvent): void => {
@@ -148,6 +167,32 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
             <div className="flex justify-between items-center mb-6">
               <span className="font-label text-sm uppercase tracking-wider text-on-surface-variant">Total Estimado</span>
               <span className="font-headline text-2xl text-on-surface">{formattedTotal}</span>
+            </div>
+            <div className="mb-4">
+              <label htmlFor="cart-customer-name" className="font-label text-[0.65rem] uppercase tracking-wider text-on-surface-variant mb-2 block">
+                Seu nome
+              </label>
+              <input
+                id="cart-customer-name"
+                type="text"
+                autoComplete="name"
+                value={customerName}
+                onChange={e => {
+                  setCustomerName(e.target.value);
+                  if (nameError) setNameError(false);
+                }}
+                placeholder="Como podemos te chamar?"
+                className={`w-full bg-surface border px-4 py-3 text-base focus:outline-none transition-colors ${
+                  nameError ? 'border-error focus:border-error' : 'hairline focus:border-primary'
+                }`}
+                aria-invalid={nameError}
+                aria-describedby={nameError ? 'cart-customer-name-error' : undefined}
+              />
+              {nameError && (
+                <p id="cart-customer-name-error" className="mt-2 font-label text-[0.65rem] text-error">
+                  Informe seu nome para finalizar pelo WhatsApp.
+                </p>
+              )}
             </div>
             <button
               type="button"

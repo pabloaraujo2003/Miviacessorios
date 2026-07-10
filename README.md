@@ -16,6 +16,12 @@ Use o número em formato internacional, só com dígitos:
 
 Exemplo: `5511912345678`
 
+Se a variável não estiver configurada, o botão avisa o cliente e não abre o WhatsApp — não existe mais número padrão embutido no código.
+
+## Registro de pedidos
+
+Ao finalizar pelo WhatsApp, o pedido (nome do cliente, itens, total, código curto tipo `MV-A1B2`) também é salvo na tabela `orders` do Supabase, em melhor esforço (não bloqueia o checkout se falhar). A dona vê o histórico na aba **Pedidos** do `/admin`, logada. Rode `supabase_schema.sql` no SQL Editor do Supabase para criar a tabela e as políticas de RLS (inserção pública, leitura só autenticada).
+
 ## Deploy na Vercel
 
 Este projeto já usa o fluxo padrão de front static da Vercel com Vite.

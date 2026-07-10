@@ -73,6 +73,31 @@ CREATE POLICY "Escrita autenticada de settings"
   USING (true)
   WITH CHECK (true);
 
-INSERT INTO public.settings (id, value) 
+INSERT INTO public.settings (id, value)
 VALUES ('hero_image_url', '/src/assets/hero.png')
 ON CONFLICT (id) DO NOTHING;
+
+-- 6. Tabela de Pedidos (registro do que foi enviado pelo WhatsApp)
+CREATE TABLE IF NOT EXISTS public.orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code TEXT NOT NULL,
+    customer_name TEXT NOT NULL,
+    items JSONB NOT NULL DEFAULT '[]',
+    total TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS: qualquer visitante pode registrar um pedido (checkout público),
+-- mas só a dona autenticada (Admin) pode listar/ler os pedidos.
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Registro publico de pedidos" ON public.orders;
+CREATE POLICY "Registro publico de pedidos"
+  ON public.orders FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Leitura autenticada de pedidos" ON public.orders;
+CREATE POLICY "Leitura autenticada de pedidos"
+  ON public.orders FOR SELECT
+  TO authenticated
+  USING (true);

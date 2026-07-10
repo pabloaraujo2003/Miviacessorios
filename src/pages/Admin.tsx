@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase';
 import { hasSupabaseKeys } from '../lib/env';
 import { mapProductRecord } from '../lib/products';
+import { mapOrderRecord } from '../lib/orders';
+import type { Order } from '../lib/orders';
 import { compressImage, optimizedImageUrl, dominantColorOf } from '../lib/images';
 import { Header } from '../components/Header';
 import { BottomNavBar } from '../components/BottomNavBar';
 import type { Product } from '../data/mockData';
 import { CATEGORIES } from '../data/mockData';
-import { Trash2, Edit2, UploadCloud, Plus, Minus, LogOut, KeyRound } from 'lucide-react';
+import { Trash2, Edit2, UploadCloud, Plus, Minus, LogOut, KeyRound, PackageSearch } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 
 interface ProductFormData {
@@ -85,6 +87,8 @@ export const Admin: React.FC = () => {
   // DB State
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   // Form state
   const [isEditing, setIsEditing] = useState(false);
@@ -128,6 +132,29 @@ export const Admin: React.FC = () => {
       setProducts(data.map(mapProductRecord).filter((product): product is Product => product !== null));
     }
     setLoading(false);
+  }, []);
+
+  const fetchOrders = useCallback(async (signal?: AbortSignal): Promise<void> => {
+    if (!isMountedRef.current) {
+      return;
+    }
+
+    setLoadingOrders(true);
+    if (!hasSupabaseKeys) {
+      setLoadingOrders(false);
+      return;
+    }
+
+    const query = supabase.from('orders').select('*').order('created_at', { ascending: false });
+    const { data, error } = signal ? await query.abortSignal(signal) : await query;
+    if (signal?.aborted || !isMountedRef.current) {
+      return;
+    }
+
+    if (!error && data) {
+      setOrders(data.map(mapOrderRecord).filter((order): order is Order => order !== null));
+    }
+    setLoadingOrders(false);
   }, []);
 
   useEffect(() => {
@@ -193,10 +220,11 @@ export const Admin: React.FC = () => {
     const abortController = new AbortController();
     queueMicrotask(() => {
       void fetchProducts(abortController.signal);
+      void fetchOrders(abortController.signal);
     });
 
     return () => abortController.abort();
-  }, [fetchProducts, session]);
+  }, [fetchProducts, fetchOrders, session]);
 
   const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.item(0);
@@ -567,11 +595,68 @@ export const Admin: React.FC = () => {
           </div>
         </section>
 
+        {/* Seção 02 — Pedidos recebidos pelo WhatsApp */}
+        <section className="animate-fade-up mb-14" style={{ animationDelay: '120ms' }}>
+          <div className="mb-6 flex items-baseline justify-between border-b hairline pb-3">
+            <div className="flex items-baseline gap-2">
+              <span className="font-body text-[0.6rem] tabular-nums text-primary">02</span>
+              <span aria-hidden="true" className="h-px w-6 self-center bg-outline-variant/60" />
+              <h2 className="font-headline italic text-xl">Pedidos</h2>
+            </div>
+            {!loadingOrders && orders.length > 0 && (
+              <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">
+                {orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}
+              </span>
+            )}
+          </div>
+
+          {loadingOrders ? (
+            <p className="animate-pulse py-10 text-center font-label text-[0.65rem] uppercase tracking-[0.3em] text-on-surface-variant">
+              Carregando pedidos
+            </p>
+          ) : orders.length === 0 ? (
+            <div className="border-y hairline py-16 text-center">
+              <PackageSearch className="mx-auto mb-4 h-8 w-8 stroke-1 text-outline" />
+              <p className="font-headline italic text-lg text-on-surface-variant">Nenhum pedido registrado</p>
+              <p className="mt-3 font-label text-[0.6rem] uppercase tracking-[0.25em] text-outline">
+                Pedidos aparecem aqui quando finalizados pelo WhatsApp
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-outline-variant/30">
+              {orders.map(order => (
+                <li key={order.code} className="py-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <p className="font-headline text-base">{order.customerName}</p>
+                    <span className="font-label text-[0.6rem] uppercase tracking-[0.2em] text-outline">{order.code}</span>
+                  </div>
+                  <p className="mt-1 font-label text-[0.55rem] uppercase tracking-[0.2em] text-outline-variant">
+                    {order.createdAt
+                      ? new Date(order.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+                      : ''}
+                  </p>
+                  <ul className="mt-2 space-y-0.5">
+                    {order.items.map((item, index) => (
+                      <li key={index} className="font-body text-sm font-light text-on-surface-variant">
+                        {item.name} x{item.quantity} — {item.price}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 font-body text-sm">
+                    <span className="text-on-surface-variant">Total: </span>
+                    <span className="font-medium">{order.total}</span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-          {/* Seção 02 — Formulário */}
+          {/* Seção 03 — Formulário */}
           <section ref={formSectionRef} className="animate-fade-up h-fit scroll-mt-24 lg:col-span-1" style={{ animationDelay: '160ms' }}>
             <div className="mb-6 flex items-baseline gap-2">
-              <span className="font-body text-[0.6rem] tabular-nums text-primary">02</span>
+              <span className="font-body text-[0.6rem] tabular-nums text-primary">03</span>
               <span aria-hidden="true" className="h-px w-6 self-center bg-outline-variant/60" />
               <h2 className="font-headline italic text-xl">{isEditing ? 'Atualizar Jóia' : 'Nova Jóia'}</h2>
             </div>
@@ -735,11 +820,11 @@ export const Admin: React.FC = () => {
             </form>
           </section>
 
-          {/* Seção 03 — Catálogo */}
+          {/* Seção 04 — Catálogo */}
           <section className="animate-fade-up lg:col-span-2" style={{ animationDelay: '240ms' }}>
             <div className="mb-6 flex items-baseline justify-between border-b hairline pb-3">
               <div className="flex items-baseline gap-2">
-                <span className="font-body text-[0.6rem] tabular-nums text-primary">03</span>
+                <span className="font-body text-[0.6rem] tabular-nums text-primary">04</span>
                 <span aria-hidden="true" className="h-px w-6 self-center bg-outline-variant/60" />
                 <h2 className="font-headline italic text-xl">Catálogo</h2>
               </div>
