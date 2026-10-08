@@ -72,6 +72,20 @@ const categoryLabelOf = (id: string): string => CATEGORIES.find(c => c.id === id
 
 const FEATURE_OPTIONS = ['Prata 925', 'Banhado a Ródio', 'Banhado a Ouro', 'Esculpido', 'Polido', 'Geométrico'];
 
+const PRODUCT_IMAGES_BUCKET_PREFIX = '/storage/v1/object/public/product-images/';
+
+/** Caminho do arquivo dentro do bucket, ou null se a URL não for do nosso Storage. */
+const storagePathOf = (url: string): string | null => {
+  try {
+    const { pathname } = new URL(url);
+    return pathname.startsWith(PRODUCT_IMAGES_BUCKET_PREFIX)
+      ? decodeURIComponent(pathname.slice(PRODUCT_IMAGES_BUCKET_PREFIX.length))
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 const parseFeatures = (value: string): string[] => value.split(',').map(f => f.trim()).filter(Boolean);
 
 const withCurrencyPrefix = (value: string): string => `R$ ${value.replace(/R\$\s*/g, '').trimStart()}`;
@@ -441,7 +455,24 @@ export const Admin: React.FC = () => {
     }
 
     if (confirm('Deseja mesmo excluir esta jóia do catálogo?') && hasSupabaseKeys) {
-      await supabase.from('products').delete().eq('id', id);
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) {
+        console.error('Erro ao excluir:', error);
+        showStatus(`Erro ao excluir: ${error.message}`, 'error');
+        return;
+      }
+
+      // Remove a foto do bucket, a menos que outra peça ou o banner ainda a usem.
+      const imageUrl = products.find(p => p.id === id)?.imageUrl ?? '';
+      const imagePath = storagePathOf(imageUrl);
+      const isShared = imageUrl === heroImageUrl || products.some(p => p.id !== id && p.imageUrl === imageUrl);
+      if (imagePath && !isShared) {
+        const { error: storageError } = await supabase.storage.from('product-images').remove([imagePath]);
+        if (storageError) {
+          console.warn('Peça excluída, mas a foto ficou no Storage:', storageError);
+        }
+      }
+
       if (isMountedRef.current) {
         showStatus('Peça removida do catálogo');
         void fetchProducts();

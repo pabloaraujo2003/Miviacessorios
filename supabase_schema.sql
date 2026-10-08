@@ -55,6 +55,12 @@ CREATE POLICY "Upload autenticado de imagens"
   TO authenticated
   WITH CHECK ( bucket_id = 'product-images' );
 
+DROP POLICY IF EXISTS "Exclusao autenticada de imagens" ON storage.objects;
+CREATE POLICY "Exclusao autenticada de imagens"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING ( bucket_id = 'product-images' );
+
 -- 5. Tabela de Configurações (Hero, etc)
 CREATE TABLE IF NOT EXISTS public.settings (
     id TEXT PRIMARY KEY,
