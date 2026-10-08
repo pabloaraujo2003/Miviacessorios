@@ -1,6 +1,7 @@
 import type { Product } from '../data/mockData';
 import { hasSupabaseKeys, supabaseAnonKey, supabaseUrl } from './env';
 import { readCache, writeCache } from './cache';
+import { hasDiscount } from './pricing';
 
 interface BundledProductRecord {
   id?: unknown;
@@ -16,6 +17,7 @@ interface ProductRecord {
   name?: unknown;
   category?: unknown;
   price?: unknown;
+  discountPercent?: unknown;
   imageUrl?: unknown;
   dominantColor?: unknown;
   collectionId?: unknown;
@@ -78,6 +80,7 @@ export const mapProductRecord = (record: unknown): Product | null => {
     name,
     category,
     price,
+    discountPercent: hasDiscount(Number(productRecord.discountPercent)) ? Number(productRecord.discountPercent) : null,
     imageUrl,
     dominantColor: toString(productRecord.dominantColor) || undefined,
     collectionId: toString(productRecord.collectionId) || undefined,

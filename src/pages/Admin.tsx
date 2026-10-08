@@ -11,11 +11,14 @@ import type { Product } from '../data/mockData';
 import { CATEGORIES } from '../data/mockData';
 import { Trash2, Edit2, UploadCloud, Plus, Minus, LogOut, KeyRound, PackageSearch } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
+import { PriceTag } from '../components/PriceTag';
+import { hasDiscount } from '../lib/pricing';
 
 interface ProductFormData {
   name: string;
   category: string;
   price: string;
+  discountPercent: string;
   imageUrl: string;
   dominantColor: string;
   collectionId: string;
@@ -34,6 +37,7 @@ interface ProductPayload {
   name: string;
   category: string;
   price: string;
+  discountPercent: number | null;
   imageUrl: string;
   dominantColor: string;
   collectionId: string;
@@ -52,6 +56,7 @@ const EMPTY_FORM: ProductFormData = {
   name: '',
   category: 'rings',
   price: 'R$ ',
+  discountPercent: '',
   imageUrl: '',
   dominantColor: '',
   collectionId: '',
@@ -357,6 +362,7 @@ export const Admin: React.FC = () => {
       name: product.name,
       category: product.category,
       price: product.price,
+      discountPercent: hasDiscount(product.discountPercent) ? String(product.discountPercent) : '',
       imageUrl: product.imageUrl,
       dominantColor: product.dominantColor || '',
       collectionId: product.collectionId || '',
@@ -384,10 +390,12 @@ export const Admin: React.FC = () => {
       return;
     }
 
+    const discount = Number(formData.discountPercent.replace(',', '.'));
     const payload: ProductPayload = {
       name: formData.name,
       category: formData.category,
       price: formData.price,
+      discountPercent: hasDiscount(discount) ? discount : null,
       imageUrl: formData.imageUrl,
       dominantColor: formData.dominantColor,
       collectionId: formData.collectionId,
@@ -708,6 +716,17 @@ export const Admin: React.FC = () => {
               </div>
 
               <div>
+                <label htmlFor="product-discount" className={LABEL_CLASS}>Desconto (%)</label>
+                <input id="product-discount" type="number" min="0" max="99" step="0.01" inputMode="decimal" placeholder="Sem desconto" name="discountPercent" value={formData.discountPercent} onChange={handleInputChange} className={INPUT_CLASS} />
+                {hasDiscount(Number(formData.discountPercent)) && (
+                  <div className="mt-2 flex items-center justify-between bg-surface-variant/20 px-4 py-3">
+                    <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">Prévia na loja</span>
+                    <PriceTag price={formData.price} discountPercent={Number(formData.discountPercent)} className="items-end" />
+                  </div>
+                )}
+              </div>
+
+              <div>
                 <label htmlFor="product-category" className={LABEL_CLASS}>Categoria</label>
                 <select id="product-category" name="category" value={formData.category} onChange={handleInputChange} className={INPUT_CLASS}>
                   <option value="rings">Anéis</option>
@@ -853,7 +872,7 @@ export const Admin: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-headline text-base">{p.name}</p>
                       <p className="mt-0.5 font-label text-[0.55rem] uppercase tracking-[0.2em] text-outline">{categoryLabelOf(p.category)}</p>
-                      <p className="mt-1.5 font-body text-sm font-light">{p.price}</p>
+                      <PriceTag price={p.price} discountPercent={p.discountPercent} size="sm" className="mt-1.5" />
                     </div>
 
                     <div className="flex shrink-0 flex-col items-end justify-between gap-2">

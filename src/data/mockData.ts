@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   category: string;
   price: string;
+  discountPercent?: number | null;
   imageUrl: string;
   /** Cor dominante da foto (hex), usada como placeholder de fundo enquanto a imagem carrega */
   dominantColor?: string;

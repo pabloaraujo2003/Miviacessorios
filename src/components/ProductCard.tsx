@@ -5,6 +5,8 @@ import { CATEGORIES } from '../data/mockData';
 import { Heart, Plus, Share2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { optimizedImageUrl, optimizedSrcSet } from '../lib/images';
+import { formatPrice, getDiscountedValue, hasDiscount } from '../lib/pricing';
+import { PriceTag } from './PriceTag';
 
 interface ProductCardProps {
   product: Product;
@@ -72,6 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         name: p.name,
         price: p.price,
         features: p.features ?? [],
+        discountPercent: product.discountPercent,
         category: product.category,
         imageUrl: product.imageUrl
       });
@@ -82,7 +85,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleShare = async (): Promise<void> => {
     const shareData = {
       title: product.name,
-      text: `${product.name} — ${product.price}\n${productFeatures.join(' • ')}`,
+      text: `${product.name} — ${hasDiscount(product.discountPercent) ? `${formatPrice(getDiscountedValue(product.price, product.discountPercent))} (${product.discountPercent}% off)` : product.price}\n${productFeatures.join(' • ')}`,
       url: window.location.href,
     };
     if (navigator.share && navigator.canShare?.(shareData)) {
@@ -162,6 +165,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
+        {hasDiscount(product.discountPercent) && !isOutOfStock && (
+          <div className="absolute bottom-4 left-4 bg-red-600 px-3 py-1 text-[0.6rem] font-bold tracking-[0.1rem] uppercase text-white">
+            -{product.discountPercent}% OFF
+          </div>
+        )}
+
         {isOutOfStock && (
           <div className="absolute top-4 right-4 bg-error text-on-error px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
             Esgotado
@@ -187,12 +196,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <div key={p.id} className="flex justify-between items-center gap-3 border-b border-outline-variant/30 pb-2 last:border-0">
                    <div className="min-w-0">
                      <p className="font-body text-[0.75rem] leading-tight truncate text-on-surface font-medium">{p.name}</p>
-                     <p className="font-body text-[0.65rem] text-on-surface-variant mt-0.5">{p.price}</p>
+                     <PriceTag price={p.price} discountPercent={product.discountPercent} size="sm" className="mt-0.5" />
                    </div>
                    <button 
                     type="button"
                     aria-label={`Adicionar ${p.name}`}
-                    onClick={() => addToCart({...p, features: p.features ?? [], category: product.category, imageUrl: product.imageUrl})}
+                    onClick={() => addToCart({...p, features: p.features ?? [], discountPercent: product.discountPercent, category: product.category, imageUrl: product.imageUrl})}
                     className="shrink-0 bg-primary text-on-primary p-2 rounded-sm active:scale-90 transition-transform shadow-sm"
                    >
                      <Plus className="w-4 h-4" />
@@ -227,9 +236,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {productFeatures.join(' • ')}
             </p>
           </div>
-          <span className={`shrink-0 font-body text-lg font-light ${isOutOfStock ? 'text-outline-variant line-through decoration-1' : 'text-on-surface'}`}>
-            {product.price}
-          </span>
+          {isOutOfStock ? (
+            <span className="shrink-0 font-body text-lg font-light text-outline-variant line-through decoration-1">
+              {product.price}
+            </span>
+          ) : (
+            <PriceTag price={product.price} discountPercent={product.discountPercent} size="lg" className="shrink-0 sm:items-end" />
+          )}
         </div>
 
         <div className="flex gap-2">

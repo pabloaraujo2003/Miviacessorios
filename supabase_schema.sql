@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     name TEXT NOT NULL,
     category TEXT NOT NULL,
     price TEXT NOT NULL,
+    "discountPercent" NUMERIC(5,2) DEFAULT NULL,
     "imageUrl" TEXT NOT NULL,
     "dominantColor" TEXT,
     "collectionId" TEXT,
@@ -17,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.products (
 -- Migração para bancos já existentes (execute uma vez no SQL Editor do Supabase):
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock INTEGER CHECK (stock IS NULL OR stock >= 0);
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS "dominantColor" TEXT;
+-- Desconto percentual (0-99). NULL = sem desconto
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS "discountPercent" NUMERIC(5,2) DEFAULT NULL;
 
 -- 2. RLS: leitura pública (loja), escrita apenas para usuários autenticados (admin)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;

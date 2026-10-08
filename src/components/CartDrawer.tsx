@@ -4,6 +4,8 @@ import { useAppContext } from '../context/appContextValue';
 import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
 import { optimizedImageUrl } from '../lib/images';
 import { generateOrderCode, saveOrder } from '../lib/orders';
+import { formatPrice, getDiscountedValue, hasDiscount } from '../lib/pricing';
+import { PriceTag } from './PriceTag';
 
 interface CartDrawerProps {
   className?: string;
@@ -19,13 +21,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
   const [customerName, setCustomerName] = useState('');
   const [nameError, setNameError] = useState(false);
 
-  const parsePrice = (priceStr: string): number => {
-    const num = priceStr.replace('R$ ', '').replace('.', '').replace(',', '.');
-    return parseFloat(num) || 0;
-  };
+  const finalPrice = (item: { price: string; discountPercent?: number | null }): string => (
+    hasDiscount(item.discountPercent) ? formatPrice(getDiscountedValue(item.price, item.discountPercent)) : item.price
+  );
 
-  const total = cart.reduce((acc, item) => acc + (parsePrice(item.price) * Math.max(1, item.quantity)), 0);
-  const formattedTotal = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const total = cart.reduce((acc, item) => acc + (getDiscountedValue(item.price, item.discountPercent) * Math.max(1, item.quantity)), 0);
+  const formattedTotal = formatPrice(total);
 
   const handleCheckout = (): void => {
     if (cart.length === 0) return;
@@ -42,7 +43,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
     }
 
     const orderCode = generateOrderCode();
-    const itemLines = cart.map(item => `• ${item.name} x${Math.max(1, item.quantity)} — ${item.price}`);
+    const itemLines = cart.map(item => (
+      hasDiscount(item.discountPercent)
+        ? `• ${item.name} x${Math.max(1, item.quantity)} — ${finalPrice(item)} (${item.discountPercent}% off, de ${item.price})`
+        : `• ${item.name} x${Math.max(1, item.quantity)} — ${item.price}`
+    ));
     const message = [
       `Oi! Sou ${trimmedName} e vim pelo site da Mivi. Quero fechar minha compra 💍`,
       '',
@@ -62,7 +67,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
     void saveOrder({
       code: orderCode,
       customerName: trimmedName,
-      items: cart.map(item => ({ name: item.name, quantity: Math.max(1, item.quantity), price: item.price })),
+      items: cart.map(item => ({ name: item.name, quantity: Math.max(1, item.quantity), price: finalPrice(item) })),
       total: formattedTotal,
     });
   };
@@ -144,7 +149,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
                     <p className="font-label text-[0.65rem] tracking-wider text-outline uppercase">{(item.features ?? []).join(' • ')}</p>
                   </div>
                   <div className="flex justify-between items-end">
-                    <span className="font-body text-sm font-light">{item.price}</span>
+                    <PriceTag price={item.price} discountPercent={item.discountPercent} size="sm" />
                     <div className="flex items-center gap-3 bg-surface-container rounded-full px-2 py-1">
                       <button type="button" aria-label={`Remover ${item.name} da sacola`} onClick={() => removeFromCart(item.id)} className="interactive-icon h-9 w-9 rounded-full text-on-surface-variant active:bg-error/10 active:text-error">
                         <Trash2 className="w-4 h-4 stroke-[1.5]" />
