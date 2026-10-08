@@ -4,6 +4,7 @@ import { BottomNavBar } from '../components/BottomNavBar';
 import { ProductCard } from '../components/ProductCard';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { useAppContext } from '../context/appContextValue';
+import { useIncrementalList } from '../hooks/useIncrementalList';
 import { Search as SearchIcon } from 'lucide-react';
 import type { Product } from '../data/mockData';
 
@@ -16,6 +17,8 @@ export const Search: React.FC = () => {
     p.name.toLowerCase().includes(normalizedQuery) ||
     (p.features ?? []).some(f => f.toLowerCase().includes(normalizedQuery))
   )), [normalizedQuery, products]);
+
+  const { visibleItems: visibleProducts, hasMore, sentinelRef } = useIncrementalList(filteredProducts, { resetKey: normalizedQuery });
 
   const showSkeletons = isLoadingProducts && !normalizedQuery;
 
@@ -49,11 +52,17 @@ export const Search: React.FC = () => {
         <section className="grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2">
           {showSkeletons
             ? Array.from({ length: 4 }, (_, i) => <SkeletonCard key={i} index={i} />)
-            : filteredProducts.map((product, index) => (
+            : visibleProducts.map((product, index) => (
                 <ProductCard key={product.id} product={product} index={index} />
               ))
           }
         </section>
+
+        {!showSkeletons && hasMore && (
+          <div ref={sentinelRef} className="mt-16 grid grid-cols-1 gap-x-8 gap-y-16 md:grid-cols-2" aria-hidden="true">
+            {Array.from({ length: 2 }, (_, i) => <SkeletonCard key={i} index={visibleProducts.length + i} />)}
+          </div>
+        )}
 
         {!showSkeletons && filteredProducts.length === 0 && (
           <div className="animate-fade-up border-y hairline py-20 text-center">
