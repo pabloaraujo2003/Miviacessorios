@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { House, Search, Heart, Shield, X } from 'lucide-react';
+import { House, Search, Heart, Shield, UserRound, X } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
+import { useAuth } from '../context/authContextValue';
 
 interface MenuDrawerProps {
   className?: string;
@@ -11,11 +12,15 @@ const NAV_ITEMS = [
   { to: '/', label: 'Colecao', icon: House },
   { to: '/search', label: 'Buscar', icon: Search },
   { to: '/saved', label: 'Salvos', icon: Heart },
-  { to: '/admin', label: 'Admin', icon: Shield },
+  { to: '/conta', label: 'Conta', icon: UserRound },
 ];
+
+const ADMIN_NAV_ITEM = { to: '/admin', label: 'Admin', icon: Shield };
 
 export const MenuDrawer: React.FC<MenuDrawerProps> = ({ className = '' }) => {
   const { isMenuOpen, closeMenu } = useAppContext();
+  const { isAdmin } = useAuth();
+  const navItems = isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
   const location = useLocation();
   const previousPathnameRef = React.useRef(location.pathname);
 
@@ -71,7 +76,7 @@ export const MenuDrawer: React.FC<MenuDrawerProps> = ({ className = '' }) => {
         </header>
 
         <nav className="flex flex-1 flex-col gap-3" aria-label="Atalhos do menu">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}

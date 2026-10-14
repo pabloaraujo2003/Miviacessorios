@@ -1,6 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Shield } from 'lucide-react';
 
 interface FooterProps {
   className?: string;
@@ -26,13 +24,6 @@ export const Footer: React.FC<FooterProps> = ({ className = '' }) => {
         <p className="font-label text-[0.6rem] tracking-[0.2em] text-outline-variant uppercase">
           © 2026 Mivi Acessórios
         </p>
-        <Link
-          className="interactive-text inline-flex items-center justify-center space-x-2 font-label text-[0.6875rem] tracking-[0.1rem] text-on-surface-variant active:scale-[0.98]"
-          to="/admin"
-        >
-          <span>ÁREA ADMINISTRATIVA</span>
-          <Shield className="h-3.5 w-3.5 stroke-[1.5]" />
-        </Link>
       </div>
     </footer>
   );

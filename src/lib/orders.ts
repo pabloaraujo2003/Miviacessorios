@@ -13,6 +13,12 @@ export interface OrderPayload {
   total: string;
 }
 
+/** Conta logada no checkout — o pedido fica vinculado a ela (aparece em "Meus pedidos"). */
+export interface OrderOwner {
+  userId: string;
+  accessToken: string;
+}
+
 interface OrderRecord {
   code?: unknown;
   customer_name?: unknown;
@@ -42,7 +48,7 @@ export const generateOrderCode = (): string => {
  * Registra o pedido no Supabase antes de abrir o WhatsApp. Melhor esforço:
  * se falhar (offline, RLS, etc.), não deve bloquear o checkout via WhatsApp.
  */
-export const saveOrder = async (order: OrderPayload): Promise<boolean> => {
+export const saveOrder = async (order: OrderPayload, owner?: OrderOwner): Promise<boolean> => {
   if (!hasSupabaseKeys) {
     return false;
   }
@@ -52,7 +58,8 @@ export const saveOrder = async (order: OrderPayload): Promise<boolean> => {
       method: 'POST',
       headers: {
         apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
+        // Com o token do usuário, o RLS confere que user_id = auth.uid()
+        Authorization: `Bearer ${owner?.accessToken ?? supabaseAnonKey}`,
         'Content-Type': 'application/json',
         Prefer: 'return=minimal',
       },
@@ -61,6 +68,7 @@ export const saveOrder = async (order: OrderPayload): Promise<boolean> => {
         customer_name: order.customerName,
         items: order.items,
         total: order.total,
+        ...(owner ? { user_id: owner.userId } : {}),
       }),
     });
     return response.ok;

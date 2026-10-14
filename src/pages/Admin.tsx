@@ -9,8 +9,9 @@ import { Header } from '../components/Header';
 import { BottomNavBar } from '../components/BottomNavBar';
 import type { Product } from '../data/mockData';
 import { CATEGORIES } from '../data/mockData';
-import { Trash2, Edit2, UploadCloud, Plus, Minus, LogOut, KeyRound, PackageSearch } from 'lucide-react';
-import type { Session } from '@supabase/supabase-js';
+import { Trash2, Edit2, UploadCloud, Plus, Minus, LogOut, PackageSearch } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/authContextValue';
 import { PriceTag } from '../components/PriceTag';
 import { hasDiscount } from '../lib/pricing';
 
@@ -95,13 +96,8 @@ export const Admin: React.FC = () => {
   const formSectionRef = useRef<HTMLElement | null>(null);
   const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auth State
-  const [session, setSession] = useState<Session | null>(null);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authError, setAuthError] = useState('');
-  const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [isSessionChecked, setIsSessionChecked] = useState(false);
+  // Acesso: só role = 'admin' (verificado no banco pelo RLS; aqui é só a guarda de UI)
+  const { isAdmin, isAuthReady, signOut } = useAuth();
 
   // DB State
   const [products, setProducts] = useState<Product[]>([]);
@@ -188,15 +184,6 @@ export const Admin: React.FC = () => {
     isMountedRef.current = true;
     const abortController = new AbortController();
 
-    const initializeSession = async (): Promise<void> => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!isMountedRef.current || abortController.signal.aborted) {
-        return;
-      }
-      setSession(currentSession);
-      setIsSessionChecked(true);
-    };
-
     const fetchHeroImage = async (): Promise<void> => {
       if (!hasSupabaseKeys) {
         return;
@@ -218,29 +205,17 @@ export const Admin: React.FC = () => {
       }
     };
 
-    void initializeSession();
     void fetchHeroImage();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      if (!isMountedRef.current) {
-        return;
-      }
-      setSession(currentSession);
-      setIsSessionChecked(true);
-    });
 
     return () => {
       isMountedRef.current = false;
       abortController.abort();
-      subscription.unsubscribe();
       if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
-    if (!session) {
+    if (!isAdmin) {
       return;
     }
 
@@ -251,7 +226,7 @@ export const Admin: React.FC = () => {
     });
 
     return () => abortController.abort();
-  }, [fetchProducts, fetchOrders, session]);
+  }, [fetchProducts, fetchOrders, isAdmin]);
 
   const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.item(0);
@@ -290,28 +265,8 @@ export const Admin: React.FC = () => {
     }
   };
 
-  const handleLogin = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    setIsAuthLoading(true);
-    setAuthError('');
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: authEmail,
-      password: authPassword,
-    });
-
-    if (!isMountedRef.current) {
-      return;
-    }
-
-    if (error) {
-      setAuthError(error.message);
-    }
-    setIsAuthLoading(false);
-  };
-
   const handleLogout = async (): Promise<void> => {
-    await supabase.auth.signOut();
+    await signOut();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>): void => {
@@ -504,7 +459,7 @@ export const Admin: React.FC = () => {
     }
   };
 
-  if (!isSessionChecked) {
+  if (!isAuthReady) {
     return (
       <div className="min-h-screen bg-background text-on-surface flex items-center justify-center">
         <p className="animate-pulse font-label text-[0.65rem] uppercase tracking-[0.3em] text-on-surface-variant">Carregando sessão</p>
@@ -512,66 +467,9 @@ export const Admin: React.FC = () => {
     );
   }
 
-  // --- LOGIN VIEW ---
-  if (!session) {
-    return (
-      <div className="min-h-screen overflow-x-clip bg-background text-on-surface">
-        <Header />
-        <main className="mx-auto flex max-w-7xl items-center justify-center px-4 pb-28 pt-32 md:px-8">
-          <div className="animate-fade-up w-full max-w-md border hairline bg-surface-container-lowest p-8 sm:p-10">
-            <div className="mb-10 text-center">
-              <KeyRound className="mx-auto mb-6 h-8 w-8 stroke-1 text-primary" />
-              <p className="font-label text-[0.65rem] uppercase tracking-[0.35em] text-on-surface-variant">
-                Acesso Privado
-              </p>
-              <h1 className="mt-3 font-headline italic text-3xl">Painel Mivi</h1>
-              <div className="mx-auto mt-5 h-px w-12 bg-primary opacity-40" />
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-6">
-              {authError && (
-                <div className="border hairline border-error/30 bg-error/5 px-4 py-3 font-label text-xs text-error">
-                  Falha: {authError}
-                </div>
-              )}
-              <div>
-                <label htmlFor="admin-email" className={LABEL_CLASS}>E-mail</label>
-                <input
-                  id="admin-email"
-                  required
-                  type="email"
-                  autoComplete="email"
-                  value={authEmail}
-                  onChange={e => setAuthEmail(e.target.value)}
-                  className={INPUT_CLASS}
-                />
-              </div>
-              <div>
-                <label htmlFor="admin-password" className={LABEL_CLASS}>Senha</label>
-                <input
-                  id="admin-password"
-                  required
-                  type="password"
-                  autoComplete="current-password"
-                  value={authPassword}
-                  onChange={e => setAuthPassword(e.target.value)}
-                  className={INPUT_CLASS}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isAuthLoading}
-                className="interactive-surface w-full bg-primary py-4 font-label text-xs uppercase tracking-[0.2em] text-on-primary active:bg-primary-dim disabled:opacity-50"
-              >
-                {isAuthLoading ? 'Autenticando...' : 'Liberar Painel'}
-              </button>
-            </form>
-          </div>
-        </main>
-        <BottomNavBar />
-      </div>
-    );
+  // Sem conta admin: login/conta unificados em /conta
+  if (!isAdmin) {
+    return <Navigate to="/conta?next=/admin" replace />;
   }
 
   // --- DASHBOARD VIEW ---

@@ -2,6 +2,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import { AuthProvider } from './context/AuthContext';
 import { CartDrawer } from './components/CartDrawer';
 import { MenuDrawer } from './components/MenuDrawer';
 
@@ -9,6 +10,7 @@ import { MenuDrawer } from './components/MenuDrawer';
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
 const Saved = lazy(() => import('./pages/Saved').then(m => ({ default: m.Saved })));
 const Search = lazy(() => import('./pages/Search').then(m => ({ default: m.Search })));
+const Account = lazy(() => import('./pages/Account').then(m => ({ default: m.Account })));
 const Admin = lazy(() => import('./pages/Admin').then(m => ({ default: m.Admin })));
 
 const PageLoader = () => (
@@ -20,6 +22,7 @@ const PageLoader = () => (
 function App() {
   return (
     <Router>
+      <AuthProvider>
       <AppProvider>
         <div aria-hidden="true" className="grain-overlay" />
         <CartDrawer />
@@ -29,10 +32,12 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/saved" element={<Saved />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/conta" element={<Account />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </Suspense>
       </AppProvider>
+      </AuthProvider>
     </Router>
   );
 }

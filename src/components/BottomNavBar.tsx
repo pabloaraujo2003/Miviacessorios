@@ -1,12 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Sparkles, Search, Heart, Shield } from 'lucide-react';
+import { Sparkles, Search, Heart, Shield, UserRound } from 'lucide-react';
+import { useAuth } from '../context/authContextValue';
 
 interface BottomNavBarProps {
   className?: string;
 }
 
 export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) => {
+  const { isAdmin } = useAuth();
   const getLinkClasses = (isActive: boolean) => {
     const base =
       "mobile-tap-highlight touch-manipulation flex min-h-[4.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.25rem] px-2 py-3 text-center transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.96]";
@@ -60,16 +62,29 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
         )}
       </NavLink>
       
-      <NavLink to="/admin" className={({ isActive }) => getLinkClasses(isActive)}>
+      <NavLink to="/conta" className={({ isActive }) => getLinkClasses(isActive)}>
         {({ isActive }) => (
           <>
-            <Shield className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
+            <UserRound className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
             <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
-              Admin
+              Conta
             </span>
           </>
         )}
       </NavLink>
+
+      {isAdmin && (
+        <NavLink to="/admin" className={({ isActive }) => getLinkClasses(isActive)}>
+          {({ isActive }) => (
+            <>
+              <Shield className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
+              <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
+                Admin
+              </span>
+            </>
+          )}
+        </NavLink>
+      )}
 
       </div>
     </nav>

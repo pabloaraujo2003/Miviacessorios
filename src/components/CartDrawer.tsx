@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ShoppingBag, X, Plus, Trash2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
+import { useAuth } from '../context/authContextValue';
 import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
 import { optimizedImageUrl } from '../lib/images';
 import { generateOrderCode, saveOrder } from '../lib/orders';
@@ -18,7 +19,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
 
   const touchStartX = useRef<number | null>(null);
   const [dragX, setDragX] = useState(0);
+  const { session, profile, getFreshSession } = useAuth();
   const [customerName, setCustomerName] = useState('');
+  const [isNameEdited, setIsNameEdited] = useState(false);
+  // Logado: usa o nome da conta até a pessoa digitar outro
+  const displayedName = isNameEdited ? customerName : (profile?.name || customerName);
   const [nameError, setNameError] = useState(false);
 
   const finalPrice = (item: { price: string; discountPercent?: number | null }): string => (
@@ -31,7 +36,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
   const handleCheckout = (): void => {
     if (cart.length === 0) return;
 
-    const trimmedName = customerName.trim();
+    const trimmedName = displayedName.trim();
     if (!trimmedName) {
       setNameError(true);
       return;
@@ -64,12 +69,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
 
     // Melhor esforço: registra o pedido para a dona conseguir consultar depois.
     // Não bloqueia a abertura do WhatsApp (que precisa ser síncrona ao clique).
-    void saveOrder({
+    const orderPayload = {
       code: orderCode,
       customerName: trimmedName,
       items: cart.map(item => ({ name: item.name, quantity: Math.max(1, item.quantity), price: finalPrice(item) })),
       total: formattedTotal,
-    });
+    };
+    if (session) {
+      // Token renovado: um access_token expirado faria o RLS recusar o vínculo
+      void getFreshSession().then(fresh => saveOrder(
+        orderPayload,
+        fresh ? { userId: fresh.user.id, accessToken: fresh.access_token } : undefined,
+      ));
+    } else {
+      void saveOrder(orderPayload);
+    }
   };
 
   const handleTouchStart = (e: React.TouchEvent): void => {
@@ -181,9 +195,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
                 id="cart-customer-name"
                 type="text"
                 autoComplete="name"
-                value={customerName}
+                value={displayedName}
                 onChange={e => {
                   setCustomerName(e.target.value);
+                  setIsNameEdited(true);
                   if (nameError) setNameError(false);
                 }}
                 placeholder="Como podemos te chamar?"
