@@ -13,7 +13,7 @@ import { Trash2, Edit2, UploadCloud, Plus, Minus, LogOut, PackageSearch } from '
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/authContextValue';
 import { PriceTag } from '../components/PriceTag';
-import { hasDiscount } from '../lib/pricing';
+import { displayPriceOf, hasDiscount } from '../lib/pricing';
 
 interface ProductFormData {
   name: string;
@@ -809,7 +809,7 @@ export const Admin: React.FC = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-headline text-base">{p.name}</p>
                       <p className="mt-0.5 font-label text-[0.55rem] uppercase tracking-[0.2em] text-outline">{categoryLabelOf(p.category)}</p>
-                      <PriceTag price={p.price} discountPercent={p.discountPercent} size="sm" className="mt-1.5" />
+                      <PriceTag price={displayPriceOf(p).price} discountPercent={p.discountPercent} size="sm" className="mt-1.5" />
                     </div>
 
                     <div className="flex shrink-0 flex-col items-end justify-between gap-2">

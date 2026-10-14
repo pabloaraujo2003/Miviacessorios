@@ -5,7 +5,7 @@ import { CATEGORIES } from '../data/mockData';
 import { Heart, Plus, Share2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { optimizedImageUrl, optimizedSrcSet } from '../lib/images';
-import { formatPrice, getDiscountedValue, hasDiscount } from '../lib/pricing';
+import { displayPriceOf, formatPrice, getDiscountedValue, hasDiscount } from '../lib/pricing';
 import { PriceTag } from './PriceTag';
 
 interface ProductCardProps {
@@ -26,6 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const productFeatures = product.features ?? [];
   const bundledProducts = product.bundledProducts ?? [];
   const hasBundleOptions = Boolean(product.isBundle && bundledProducts.length > 0);
+  const { price: displayPrice, isFrom } = displayPriceOf(product);
   const isOutOfStock = product.stock === 0;
   const isLowStock = typeof product.stock === 'number' && product.stock > 0 && product.stock <= 3;
   const indexLabel = String(index + 1).padStart(2, '0');
@@ -85,7 +86,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const handleShare = async (): Promise<void> => {
     const shareData = {
       title: product.name,
-      text: `${product.name} — ${hasDiscount(product.discountPercent) ? `${formatPrice(getDiscountedValue(product.price, product.discountPercent))} (${product.discountPercent}% off)` : product.price}\n${productFeatures.join(' • ')}`,
+      text: `${product.name} — ${isFrom ? 'a partir de ' : ''}${hasDiscount(product.discountPercent) ? `${formatPrice(getDiscountedValue(displayPrice, product.discountPercent))} (${product.discountPercent}% off)` : displayPrice}\n${productFeatures.join(' • ')}`,
       url: window.location.href,
     };
     if (navigator.share && navigator.canShare?.(shareData)) {
@@ -236,13 +237,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {productFeatures.join(' • ')}
             </p>
           </div>
-          {isOutOfStock ? (
-            <span className="shrink-0 font-body text-lg font-light text-outline-variant line-through decoration-1">
-              {product.price}
-            </span>
-          ) : (
-            <PriceTag price={product.price} discountPercent={product.discountPercent} size="lg" className="shrink-0 sm:items-end" />
-          )}
+          <div className="flex shrink-0 flex-col sm:items-end">
+            {isFrom && (
+              <span className="mb-1 font-label text-[0.55rem] uppercase tracking-[0.2em] text-outline">A partir de</span>
+            )}
+            {isOutOfStock ? (
+              <span className="font-body text-lg font-light text-outline-variant line-through decoration-1">
+                {displayPrice}
+              </span>
+            ) : (
+              <PriceTag price={displayPrice} discountPercent={product.discountPercent} size="lg" className="sm:items-end" />
+            )}
+          </div>
         </div>
 
         <div className="flex gap-2">
