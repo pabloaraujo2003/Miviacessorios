@@ -108,10 +108,15 @@ export const fetchProductsRest = async (signal?: AbortSignal): Promise<Product[]
   }
 
   try {
-    const response = await fetch(`${supabaseUrl}/rest/v1/products?select=*`, {
-      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
+    const headers = { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` };
+    let response = await fetch(`${supabaseUrl}/rest/v1/products?select=*&order=created_at.desc`, {
+      headers,
       signal,
     });
+    // Fallback enquanto a coluna created_at não foi migrada no banco (PostgREST responde 400)
+    if (response.status === 400) {
+      response = await fetch(`${supabaseUrl}/rest/v1/products?select=*`, { headers, signal });
+    }
     if (!response.ok) {
       return null;
     }

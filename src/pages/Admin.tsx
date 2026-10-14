@@ -141,8 +141,16 @@ export const Admin: React.FC = () => {
       return;
     }
 
-    const query = supabase.from('products').select('*');
-    const { data, error } = signal ? await query.abortSignal(signal) : await query;
+    const run = (ordered: boolean) => {
+      const base = supabase.from('products').select('*');
+      const query = ordered ? base.order('created_at', { ascending: false }) : base;
+      return signal ? query.abortSignal(signal) : query;
+    };
+    let { data, error } = await run(true);
+    // Fallback enquanto a coluna created_at não foi migrada no banco
+    if (error?.code === '42703') {
+      ({ data, error } = await run(false));
+    }
     if (signal?.aborted || !isMountedRef.current) {
       return;
     }

@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS public.products (
     "isBundle" BOOLEAN DEFAULT false,
     "bundledProducts" JSONB DEFAULT '[]',
     -- NULL = estoque não controlado (sempre vendável); número = quantidade disponível
-    stock INTEGER CHECK (stock IS NULL OR stock >= 0)
+    stock INTEGER CHECK (stock IS NULL OR stock >= 0),
+    -- Data de cadastro; o catálogo é exibido do mais recente para o mais antigo
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Migração para bancos já existentes (execute uma vez no SQL Editor do Supabase):
@@ -20,6 +22,23 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock INTEGER CHECK (stock 
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS "dominantColor" TEXT;
 -- Desconto percentual (0-99). NULL = sem desconto
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS "discountPercent" NUMERIC(5,2) DEFAULT NULL;
+-- Data de cadastro (ordenação por mais recente). Produtos já existentes recebem
+-- datas escalonadas seguindo a ordem física atual, para não empatarem todos.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'products' AND column_name = 'created_at'
+  ) THEN
+    ALTER TABLE public.products
+      ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL;
+    UPDATE public.products p
+       SET created_at = now() - (o.rn * interval '1 second')
+      FROM (SELECT id, row_number() OVER (ORDER BY ctid DESC) AS rn FROM public.products) o
+     WHERE p.id = o.id;
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS products_created_at_idx ON public.products (created_at DESC);
 
 -- 2. RLS: leitura pública (loja), escrita apenas para usuários autenticados (admin)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
