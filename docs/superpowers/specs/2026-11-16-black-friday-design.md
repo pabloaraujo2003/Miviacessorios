@@ -18,13 +18,23 @@ produtos que já têm desconto cadastrado no Admin (`products."discountPercent"`
 - O header é `fixed`; um espaçador em fluxo com a altura da faixa é renderizado junto,
   para que as páginas não precisem mudar o padding.
 
-## Card de produto (só produtos com desconto e em estoque)
-- Durante a campanha, o selo vermelho `-X% OFF` é substituído por uma faixa preta de ponta
-  a ponta na base da foto: `BLACK FRIDAY` à esquerda, `-X%` em vermelho à direita.
-- Abaixo do preço: `Economize R$ Y` em verde (diferença entre original e final do preço de vitrine).
+## Card de produto (só produtos em promoção: com desconto e em estoque)
+- Durante a campanha, o selo vermelho `-X% OFF` vira uma etiqueta preta "pendurada" no topo
+  direito da foto (`-X%` em vermelho + `BLACK FRIDAY`). O aviso de estoque baixo desce para o
+  canto inferior esquerdo para não colidir.
+- Abaixo do preço: `Economize R$ Y` em verde (só para preço único).
 - Produtos sem desconto não mudam.
 
+## Carrossel de destaques (substitui a foto estática do topo)
+- `HeroCarousel`: até 5 produtos — na campanha, os em promoção; fora dela, os mais recentes em estoque.
+- Celular: 1 slide por vez, foto de ponta a ponta com nome, preço e botão. Desktop: 3 slides
+  lado a lado em 4:5 (sem cortar as fotos).
+- Avança sozinho a cada 5s (pausa ao tocar/passar o mouse, respeita reduced-motion); deslizar é nativo (scroll-snap).
+- Botão "Ver ofertas" ativa o filtro Black Friday e desce até o catálogo ("Ver coleção" fora da campanha).
+- A foto de capa do Admin (`settings.hero_image_url`) deixa de ser exibida.
+
 ## Catálogo
+- O filtro de categorias fica grudado abaixo do header ao rolar (altura do header em `--header-h`).
 - Chip `Black Friday` como primeira opção do filtro de categorias (só durante a campanha),
   filtrando produtos com desconto; mostra a contagem.
 - Durante a campanha, produtos com desconto vêm primeiro; dentro de cada grupo mantém-se a

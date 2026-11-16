@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { BottomNavBar } from '../components/BottomNavBar';
-import { Hero } from '../components/Hero';
+import { HeroCarousel } from '../components/HeroCarousel';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { ProductCard } from '../components/ProductCard';
 import { SkeletonCard } from '../components/SkeletonCard';
@@ -17,6 +17,17 @@ import type { Product } from '../data/mockData';
 export const Home: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { products, isLoadingProducts, refreshProducts } = useAppContext();
+  const catalogRef = useRef<HTMLDivElement>(null);
+
+  // Com o filtro grudado no topo, trocar de categoria lá embaixo volta ao início
+  // da lista; reveal (botão do carrossel) desce até ela
+  const handleSelectCategory = (id: string, reveal = false): void => {
+    setSelectedCategory(id);
+    const catalog = catalogRef.current;
+    if (catalog && (reveal || catalog.getBoundingClientRect().top < 0)) {
+      catalog.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const { pullDistance, isRefreshing, isTriggered } = usePullToRefresh({
     onRefresh: refreshProducts,
@@ -60,10 +71,14 @@ export const Home: React.FC = () => {
           transition: pullDistance > 0 ? 'none' : 'transform 0.3s ease',
         }}
       >
-        <Hero />
-        <CategoryFilter onSelectCategory={setSelectedCategory} />
+        <HeroCarousel onShopClick={() => handleSelectCategory(isBlackFridayActive() ? BLACK_FRIDAY_CATEGORY : 'all', true)} />
+        <CategoryFilter activeCategory={selectedCategory} onSelectCategory={handleSelectCategory} />
 
-        <div className="mb-12 flex items-baseline justify-end">
+        <div
+          ref={catalogRef}
+          className="mb-12 flex items-baseline justify-end"
+          style={{ scrollMarginTop: 'calc(var(--header-h, 77px) + 4.5rem)' }}
+        >
           {!showSkeletons && (
             <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">
               {filteredProducts.length} {filteredProducts.length === 1 ? 'peça' : 'peças'}

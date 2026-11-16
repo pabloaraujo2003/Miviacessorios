@@ -1,32 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { CATEGORIES, matchesCategory } from '../data/mockData';
 import { useAppContext } from '../context/appContextValue';
 import { BLACK_FRIDAY_CATEGORY, isBlackFridayActive, isOnSale } from '../lib/campaign';
 
 interface CategoryFilterProps {
+  activeCategory: string;
+  onSelectCategory: (id: string) => void;
   className?: string;
-  onSelectCategory?: (id: string) => void;
 }
 
 export const CategoryFilter: React.FC<CategoryFilterProps> = ({
+  activeCategory,
+  onSelectCategory,
   className = '',
-  onSelectCategory
 }) => {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const { products } = useAppContext();
   const blackFridayCount = isBlackFridayActive() ? products.filter(isOnSale).length : 0;
   const isBlackFridaySelected = activeCategory === BLACK_FRIDAY_CATEGORY;
 
   const handleSelect = (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
     e.preventDefault();
-    setActiveCategory(id);
-    if (onSelectCategory) {
-      onSelectCategory(id);
-    }
+    onSelectCategory(id);
   };
 
   return (
-    <nav className={`mb-14 overflow-x-auto no-scrollbar whitespace-nowrap border-y hairline py-4 ${className}`} aria-label="Filtro de categorias">
+    <nav
+      className={`sticky z-30 -mx-4 mb-14 overflow-x-auto no-scrollbar whitespace-nowrap border-y hairline bg-background/95 px-4 py-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 ${className}`}
+      style={{ top: 'var(--header-h, 77px)' }}
+      aria-label="Filtro de categorias"
+    >
       <div className="flex min-w-max items-baseline justify-start gap-7 px-2 sm:justify-center sm:gap-10 sm:px-4">
         {blackFridayCount > 0 && (
           <button

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { Menu, ShoppingBag } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { blackFridayEndLabel, isBlackFridayActive, maxDiscountOf } from '../lib/campaign';
@@ -11,6 +11,18 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const { cart, products, toggleCart, toggleMenu } = useAppContext();
   const showBlackFriday = isBlackFridayActive();
   const maxDiscount = showBlackFriday ? maxDiscountOf(products) : null;
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Expõe a altura do header fixo em --header-h (o filtro de categorias gruda logo abaixo)
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const update = () => document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
   
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
@@ -20,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
 
   return (
     <>
-      <header className={`bg-[#f8f9fa]/95 dark:bg-[#1f1f1f]/95 backdrop-blur-md fixed top-0 w-full z-40 border-b hairline ${className}`}>
+      <header ref={headerRef} className={`bg-[#f8f9fa]/95 dark:bg-[#1f1f1f]/95 backdrop-blur-md fixed top-0 w-full z-40 border-b hairline ${className}`}>
         {showBlackFriday && (
           <div className="flex h-8 items-center justify-center bg-[#0c0c0c] px-4 text-center font-label text-[0.6rem] uppercase tracking-[0.25em] text-white">
             <span className="truncate">

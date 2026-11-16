@@ -172,9 +172,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {isBlackFriday ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-[#0c0c0c] px-4 py-2.5 font-label uppercase text-white">
-            <span className="text-[0.6rem] tracking-[0.25em]">Black Friday</span>
-            <span className="text-base font-bold tracking-wide text-[#ff5a5f]">-{product.discountPercent}%</span>
+          <div
+            className="pointer-events-none absolute right-4 top-0 w-14 bg-[#0c0c0c] pb-4 pt-3 text-center font-label uppercase leading-none text-white"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 88%, 0 100%)' }}
+          >
+            <span className="block text-base font-bold tracking-wide text-[#ff5a5f]">-{product.discountPercent}%</span>
+            <span className="mt-1.5 block text-[0.45rem] tracking-[0.2em]">Black<br />Friday</span>
           </div>
         ) : isOnSale && (
           <div className="absolute bottom-4 left-4 bg-red-600 px-3 py-1 text-[0.6rem] font-bold tracking-[0.1rem] uppercase text-white">
@@ -189,7 +192,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {isLowStock && (
-          <div className="absolute top-4 right-4 bg-surface-container-highest text-error px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase">
+          <div className={`absolute ${isBlackFriday ? 'bottom-4 left-4' : 'top-4 right-4'} bg-surface-container-highest text-error px-3 py-1 text-[0.6rem] tracking-[0.1rem] uppercase`}>
             {product.stock === 1 ? 'Última unidade' : `Restam ${product.stock}`}
           </div>
         )}

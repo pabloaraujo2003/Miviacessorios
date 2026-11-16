@@ -94,11 +94,10 @@ export const mapProductRecord = (record: unknown): Product | null => {
 };
 
 const PRODUCTS_CACHE_KEY = 'products';
-const HERO_CACHE_KEY = 'hero_url';
 
 /**
  * Fetch via REST (PostgREST) direto, sem @supabase/supabase-js — mantém o
- * caminho público (Home/AppContext/Hero) livre desse pacote, que só é
+ * caminho público (Home/AppContext) livre desse pacote, que só é
  * necessário no Admin (auth, storage, escrita). Isso permite ao bundler
  * isolar o vendor-supabase (~47KB gzip) no chunk assíncrono do /admin.
  */
@@ -127,29 +126,6 @@ export const fetchProductsRest = async (signal?: AbortSignal): Promise<Product[]
   }
 };
 
-export const fetchHeroUrlRest = async (signal?: AbortSignal): Promise<string | null> => {
-  if (!hasSupabaseKeys) {
-    return null;
-  }
-
-  try {
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/settings?select=value&id=eq.hero_image_url`,
-      { headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` }, signal }
-    );
-    if (!response.ok) {
-      return null;
-    }
-    const rows = (await response.json()) as { value?: unknown }[];
-    const value = rows[0]?.value;
-    return typeof value === 'string' ? value : null;
-  } catch {
-    return null;
-  }
-};
-
 export const readCachedProducts = (): Product[] | null => readCache<Product[]>(PRODUCTS_CACHE_KEY);
 export const writeCachedProducts = (products: Product[]): void => writeCache(PRODUCTS_CACHE_KEY, products);
 
-export const readCachedHeroUrl = (): string | null => readCache<string>(HERO_CACHE_KEY);
-export const writeCachedHeroUrl = (url: string): void => writeCache(HERO_CACHE_KEY, url);
