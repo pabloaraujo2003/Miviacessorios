@@ -1,9 +1,10 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { BottomNavBar } from '../components/BottomNavBar';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { CategoryFilter } from '../components/CategoryFilter';
+import { MobileCategorySheet } from '../components/MobileCategorySheet';
 import { ProductCard } from '../components/ProductCard';
 import { SkeletonCard } from '../components/SkeletonCard';
 import { useAppContext } from '../context/appContextValue';
@@ -18,6 +19,20 @@ export const Home: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { products, isLoadingProducts, refreshProducts } = useAppContext();
   const catalogRef = useRef<HTMLDivElement>(null);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const [isFilterOffscreen, setIsFilterOffscreen] = useState(false);
+
+  // Celular: a pílula "Filtrar" aparece quando o filtro do topo já passou por baixo do header
+  useEffect(() => {
+    const filter = filterRef.current;
+    if (!filter) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsFilterOffscreen(!entry.isIntersecting && entry.boundingClientRect.top < 0),
+      { rootMargin: '-120px 0px 0px 0px' },
+    );
+    observer.observe(filter);
+    return () => observer.disconnect();
+  }, []);
 
   // Com o filtro grudado no topo, trocar de categoria lá embaixo volta ao início
   // da lista; reveal (botão do carrossel) desce até ela
@@ -72,12 +87,15 @@ export const Home: React.FC = () => {
         }}
       >
         <HeroCarousel onShopClick={() => handleSelectCategory(isBlackFridayActive() ? BLACK_FRIDAY_CATEGORY : 'all', true)} />
-        <CategoryFilter activeCategory={selectedCategory} onSelectCategory={handleSelectCategory} />
+        {/* md:contents: no desktop o wrapper some do layout para o filtro poder grudar */}
+        <div ref={filterRef} className="md:contents">
+          <CategoryFilter activeCategory={selectedCategory} onSelectCategory={handleSelectCategory} />
+        </div>
 
         <div
           ref={catalogRef}
-          className="mb-12 flex items-baseline justify-end"
-          style={{ scrollMarginTop: 'calc(var(--header-h, 77px) + 4.5rem)' }}
+          className="mb-6 flex items-baseline justify-end sm:mb-12"
+          style={{ scrollMarginTop: 'calc(var(--header-h, 77px) + 3.5rem)' }}
         >
           {!showSkeletons && (
             <span className="font-label text-[0.6rem] uppercase tracking-[0.25em] text-on-surface-variant">
@@ -113,6 +131,11 @@ export const Home: React.FC = () => {
         <Footer />
       </main>
 
+      <MobileCategorySheet
+        activeCategory={selectedCategory}
+        onSelectCategory={handleSelectCategory}
+        isVisible={isFilterOffscreen}
+      />
       <BottomNavBar />
     </div>
   );

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const PULL_THRESHOLD = 72;
 const MAX_PULL = 120;
+// Movimento mínimo para decidir se o gesto é vertical (puxar) ou horizontal (carrosséis)
+const DIRECTION_LOCK_PX = 8;
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -20,6 +22,8 @@ export const usePullToRefresh = ({ onRefresh, enabled = true }: UsePullToRefresh
   const [isTriggered, setIsTriggered] = useState(false);
 
   const startY = useRef<number | null>(null);
+  const startX = useRef(0);
+  const gesture = useRef<'undecided' | 'pull' | 'ignore'>('undecided');
   const isPulling = useRef(false);
 
   const canPull = useCallback(() => {
@@ -30,13 +34,22 @@ export const usePullToRefresh = ({ onRefresh, enabled = true }: UsePullToRefresh
     const handleTouchStart = (e: TouchEvent): void => {
       if (!canPull()) return;
       startY.current = e.touches[0].clientY;
+      startX.current = e.touches[0].clientX;
+      gesture.current = 'undecided';
       isPulling.current = false;
     };
 
     const handleTouchMove = (e: TouchEvent): void => {
       if (startY.current === null || !canPull()) return;
       const delta = e.touches[0].clientY - startY.current;
-      if (delta <= 0) return;
+      const deltaX = e.touches[0].clientX - startX.current;
+
+      // Deslize lateral (ex.: carrossel do topo) não pode virar "puxar para atualizar"
+      if (gesture.current === 'undecided') {
+        if (Math.max(Math.abs(delta), Math.abs(deltaX)) < DIRECTION_LOCK_PX) return;
+        gesture.current = delta > Math.abs(deltaX) ? 'pull' : 'ignore';
+      }
+      if (gesture.current === 'ignore' || delta <= 0) return;
 
       isPulling.current = true;
       const clamped = Math.min(delta * 0.5, MAX_PULL);
@@ -67,14 +80,16 @@ export const usePullToRefresh = ({ onRefresh, enabled = true }: UsePullToRefresh
       }
     };
 
+    const onTouchEnd = (): void => { void handleTouchEnd(); };
+
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', () => { void handleTouchEnd(); });
+    window.addEventListener('touchend', onTouchEnd);
 
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', () => { void handleTouchEnd(); });
+      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [canPull, onRefresh, pullDistance]);
 
