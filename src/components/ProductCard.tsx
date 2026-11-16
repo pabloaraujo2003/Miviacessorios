@@ -5,7 +5,8 @@ import { CATEGORIES } from '../data/mockData';
 import { Heart, Plus, Share2 } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { optimizedImageUrl, optimizedSrcSet } from '../lib/images';
-import { displayPriceOf, formatPrice, getDiscountedValue, hasDiscount } from '../lib/pricing';
+import { displayPriceOf, formatPrice, getDiscountedValue, hasDiscount, parsePrice } from '../lib/pricing';
+import { isBlackFridayActive } from '../lib/campaign';
 import { PriceTag } from './PriceTag';
 
 interface ProductCardProps {
@@ -31,6 +32,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isLowStock = typeof product.stock === 'number' && product.stock > 0 && product.stock <= 3;
   const indexLabel = String(index + 1).padStart(2, '0');
   const categoryLabel = CATEGORIES.find(c => c.id === product.category)?.label ?? product.category;
+  const isOnSale = hasDiscount(product.discountPercent) && !isOutOfStock;
+  const isBlackFriday = isOnSale && isBlackFridayActive();
+  // Com opções de preços diferentes a economia varia, então só mostra para preço único
+  const savings = isOnSale && !isFrom ? parsePrice(displayPrice) - getDiscountedValue(displayPrice, product.discountPercent) : 0;
 
   // Add asymmetric spacing for even items matching the original design
   const asymmetricClass = index % 2 !== 0 ? 'md:mt-24' : '';
@@ -166,7 +171,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {hasDiscount(product.discountPercent) && !isOutOfStock && (
+        {isBlackFriday ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between bg-[#0c0c0c] px-4 py-2.5 font-label uppercase text-white">
+            <span className="text-[0.6rem] tracking-[0.25em]">Black Friday</span>
+            <span className="text-base font-bold tracking-wide text-[#ff5a5f]">-{product.discountPercent}%</span>
+          </div>
+        ) : isOnSale && (
           <div className="absolute bottom-4 left-4 bg-red-600 px-3 py-1 text-[0.6rem] font-bold tracking-[0.1rem] uppercase text-white">
             -{product.discountPercent}% OFF
           </div>
@@ -247,6 +257,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             ) : (
               <PriceTag price={displayPrice} discountPercent={product.discountPercent} size="lg" className="sm:items-end" />
+            )}
+            {savings > 0 && (
+              <span className="mt-1 font-label text-[0.65rem] font-semibold text-green-700 dark:text-green-400">
+                Economize {formatPrice(savings)}
+              </span>
             )}
           </div>
         </div>

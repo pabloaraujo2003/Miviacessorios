@@ -11,6 +11,7 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useIncrementalList } from '../hooks/useIncrementalList';
 import { hasSupabaseKeys } from '../lib/env';
 import { matchesCategory } from '../data/mockData';
+import { BLACK_FRIDAY_CATEGORY, isBlackFridayActive, isOnSale, onSaleFirst } from '../lib/campaign';
 import type { Product } from '../data/mockData';
 
 export const Home: React.FC = () => {
@@ -22,10 +23,15 @@ export const Home: React.FC = () => {
     enabled: hasSupabaseKeys,
   });
 
-  const filteredProducts = useMemo<Product[]>(
-    () => products.filter(p => matchesCategory(p, selectedCategory)),
-    [products, selectedCategory]
-  );
+  const filteredProducts = useMemo<Product[]>(() => {
+    if (!isBlackFridayActive()) {
+      return products.filter(p => matchesCategory(p, selectedCategory));
+    }
+    if (selectedCategory === BLACK_FRIDAY_CATEGORY) {
+      return products.filter(isOnSale);
+    }
+    return onSaleFirst(products.filter(p => matchesCategory(p, selectedCategory)));
+  }, [products, selectedCategory]);
 
   const { visibleItems: visibleProducts, hasMore, sentinelRef } = useIncrementalList(filteredProducts, { resetKey: selectedCategory });
 

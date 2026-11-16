@@ -5,7 +5,8 @@ import { useAuth } from '../context/authContextValue';
 import { STORE_WHATSAPP_NUMBER, hasStoreWhatsappNumber } from '../lib/storeContact';
 import { optimizedImageUrl } from '../lib/images';
 import { generateOrderCode, saveOrder } from '../lib/orders';
-import { formatPrice, getDiscountedValue, hasDiscount } from '../lib/pricing';
+import { formatPrice, getDiscountedValue, hasDiscount, parsePrice } from '../lib/pricing';
+import { isBlackFridayActive } from '../lib/campaign';
 import { PriceTag } from './PriceTag';
 
 interface CartDrawerProps {
@@ -32,6 +33,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
 
   const total = cart.reduce((acc, item) => acc + (getDiscountedValue(item.price, item.discountPercent) * Math.max(1, item.quantity)), 0);
   const formattedTotal = formatPrice(total);
+  const savings = cart.reduce((acc, item) => acc + ((parsePrice(item.price) - getDiscountedValue(item.price, item.discountPercent)) * Math.max(1, item.quantity)), 0);
+  const formattedSavings = formatPrice(savings);
 
   const handleCheckout = (): void => {
     if (cart.length === 0) return;
@@ -53,13 +56,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
         ? `• ${item.name} x${Math.max(1, item.quantity)} — ${finalPrice(item)} (${item.discountPercent}% off, de ${item.price})`
         : `• ${item.name} x${Math.max(1, item.quantity)} — ${item.price}`
     ));
+    const isBlackFriday = isBlackFridayActive();
     const message = [
+      ...(isBlackFriday ? ['🖤 *Pedido Black Friday*', ''] : []),
       `Oi! Sou ${trimmedName} e vim pelo site da Mivi. Quero fechar minha compra 💍`,
       '',
       `*Pedido ${orderCode}*`,
       ...itemLines,
       '',
       `*Total estimado:* ${formattedTotal}`,
+      ...(isBlackFriday && savings > 0 ? [`*Você economizou:* ${formattedSavings}`] : []),
       '',
       'Quero confirmar valores, entrega e forma de pagamento.',
     ].join('\n');
@@ -183,6 +189,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ className = '' }) => {
 
         {cart.length > 0 && (
           <div className="pt-6 border-t border-surface-container mt-auto">
+            {savings > 0 && (
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-label text-[0.65rem] uppercase tracking-wider text-green-700 dark:text-green-400">Você economizou</span>
+                <span className="font-body text-sm font-semibold text-green-700 dark:text-green-400">{formattedSavings}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center mb-6">
               <span className="font-label text-sm uppercase tracking-wider text-on-surface-variant">Total Estimado</span>
               <span className="font-headline text-2xl text-on-surface">{formattedTotal}</span>
