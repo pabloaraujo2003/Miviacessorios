@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Menu, ShoppingBag } from 'lucide-react';
 import { useAppContext } from '../context/appContextValue';
 import { blackFridayEndLabel, isBlackFridayActive, maxDiscountOf } from '../lib/campaign';
@@ -12,12 +12,21 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const showBlackFriday = isBlackFridayActive();
   const maxDiscount = showBlackFriday ? maxDiscountOf(products) : null;
   const headerRef = useRef<HTMLElement>(null);
+  // Celular: ao rolar, o header encolhe numa cápsula flutuante (como a barra inferior)
+  const [isCompact, setIsCompact] = useState(false);
+
+  useEffect(() => {
+    const update = () => setIsCompact(window.scrollY > 24);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
 
   // Expõe a altura do header fixo em --header-h (o filtro de categorias gruda logo abaixo)
   useLayoutEffect(() => {
     const header = headerRef.current;
     if (!header) return;
-    const update = () => document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+    const update = () => document.documentElement.style.setProperty('--header-h', `${Math.round(header.getBoundingClientRect().bottom)}px`);
     update();
     const observer = new ResizeObserver(update);
     observer.observe(header);
@@ -32,9 +41,16 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
 
   return (
     <>
-      <header ref={headerRef} className={`bg-[#f8f9fa]/95 dark:bg-[#1f1f1f]/95 backdrop-blur-md fixed top-0 w-full z-40 border-b hairline ${className}`}>
+      <header
+        ref={headerRef}
+        className={`fixed left-0 right-0 top-0 z-40 overflow-hidden backdrop-blur-md transition-[top,left,right,border-radius,background-color,box-shadow] duration-300 ${
+          isCompact
+            ? 'border-b hairline bg-[#f8f9fa]/95 dark:bg-[#1f1f1f]/95 max-md:left-3 max-md:right-3 max-md:top-[calc(0.5rem+env(safe-area-inset-top))] max-md:rounded-[999px] max-md:border max-md:border-black/[0.06] max-md:bg-[#f8f9fa]/55 max-md:shadow-[0_12px_40px_rgba(43,52,55,0.14)] max-md:backdrop-saturate-150 max-md:dark:border-white/10 max-md:dark:bg-[#1f1f1f]/55'
+            : 'border-b hairline bg-[#f8f9fa]/95 dark:bg-[#1f1f1f]/95'
+        } ${className}`}
+      >
         {showBlackFriday && (
-          <div className="flex h-8 items-center justify-center bg-[#0c0c0c] px-4 text-center font-label text-[0.6rem] uppercase tracking-[0.25em] text-white">
+          <div className={`flex h-8 items-center justify-center overflow-hidden bg-[#0c0c0c] px-4 text-center font-label text-[0.6rem] uppercase tracking-[0.25em] text-white transition-[height] duration-300 ${isCompact ? 'max-md:h-0' : ''}`}>
             <span className="truncate">
               Black Friday
               {maxDiscount !== null && (
@@ -44,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             </span>
           </div>
         )}
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+        <div className={`mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 transition-[padding] duration-300 sm:px-6 lg:px-8 ${isCompact ? 'max-md:px-1.5 max-md:py-0.5' : ''}`}>
           <button
             aria-label="Abrir menu"
             onClick={toggleMenu}
@@ -57,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
             className="min-w-0 flex-1 cursor-pointer select-none truncate text-center leading-none text-[#2b3437] dark:text-[#f8f9fa] active:opacity-70 transition-opacity"
           >
             <span className="block font-headline text-base font-light tracking-[0.32em] sm:text-lg md:text-xl md:tracking-[0.4em]">MIVI</span>
-            <span className="mt-1 block font-label text-[0.5rem] uppercase tracking-[0.45em] text-outline sm:text-[0.55rem]">Acessórios</span>
+            <span className={`mt-1 block font-label text-[0.5rem] uppercase tracking-[0.45em] text-outline sm:text-[0.55rem] ${isCompact ? 'max-md:hidden' : ''}`}>Acessórios</span>
           </h1>
           <button 
             aria-label="Abrir sacola"
