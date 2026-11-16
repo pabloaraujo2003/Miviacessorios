@@ -11,9 +11,9 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
   const { isAdmin } = useAuth();
   const getLinkClasses = (isActive: boolean) => {
     const base =
-      "mobile-tap-highlight touch-manipulation flex min-h-[4.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.25rem] px-2 py-3 text-center transition-[background-color,color,transform,box-shadow] duration-200 active:scale-[0.96]";
+      "mobile-tap-highlight touch-manipulation flex min-h-[2.75rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[999px] px-2 py-1 text-center transition-[background-color,color,transform] duration-200 active:scale-[0.96]";
     if (isActive) {
-      return `${base} bg-[#eaeff1] text-[#2b3437] shadow-[0_10px_30px_rgba(43,52,55,0.10)] dark:bg-[#2b3437] dark:text-[#ffffff]`;
+      return `${base} bg-[#2b3437]/[0.07] text-[#2b3437] dark:bg-white/10 dark:text-[#ffffff]`;
     }
     return `${base} text-[#737c7f] active:bg-[#2b3437]/6 active:text-[#2b3437] dark:text-[#abb3b7] dark:active:bg-white/8 dark:active:text-[#f8f9fa]`;
   };
@@ -25,9 +25,11 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
   return (
     <nav
       aria-label="Navegacao principal mobile"
-      className={`md:hidden fixed bottom-0 left-0 z-50 w-full rounded-t-[1.75rem] border-t border-black/5 bg-[#f8f9fa]/97 backdrop-blur-md shadow-[0px_-18px_50px_rgba(43,52,55,0.08)] dark:border-white/10 dark:bg-[#1f1f1f]/97 ${className}`}
+      className={`md:hidden fixed inset-x-3 z-50 mx-auto max-w-md rounded-[999px] border border-black/[0.06] bg-[#f8f9fa]/55 shadow-[0_12px_40px_rgba(43,52,55,0.14)] backdrop-blur-md backdrop-saturate-150 dark:border-white/10 dark:bg-[#1f1f1f]/55 ${className}`}
+      style={{ bottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-stretch gap-2 px-3 pb-[calc(0.9rem+env(safe-area-inset-bottom))] pt-3 sm:px-4">
+      {/* Cápsula flutuante: descolada das bordas, item ativo com pílula por trás */}
+      <div className="flex w-full items-stretch gap-1 p-1">
       
       <NavLink 
         to="/" 
@@ -36,17 +38,17 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
       >
         {({ isActive }) => (
           <>
-            <Sparkles className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
-            <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
-              Colecao
+            <Sparkles className="h-[1.15rem] w-[1.15rem] stroke-[1.6]" fill={isActive ? 'currentColor' : 'none'} />
+            <span className="block max-w-full truncate font-label text-[0.6rem] font-medium tracking-[0.01em]">
+              Coleção
             </span>
           </>
         )}
       </NavLink>
       
       <NavLink to="/search" className={({ isActive }) => getLinkClasses(isActive)}>
-        <Search className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" />
-        <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
+        <Search className="h-[1.15rem] w-[1.15rem] stroke-[1.6]" />
+        <span className="block max-w-full truncate font-label text-[0.6rem] font-medium tracking-[0.01em]">
           Buscar
         </span>
       </NavLink>
@@ -54,8 +56,8 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
       <NavLink to="/saved" className={({ isActive }) => getLinkClasses(isActive)}>
         {({ isActive }) => (
           <>
-            <Heart className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
-            <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
+            <Heart className="h-[1.15rem] w-[1.15rem] stroke-[1.6]" fill={isActive ? 'currentColor' : 'none'} />
+            <span className="block max-w-full truncate font-label text-[0.6rem] font-medium tracking-[0.01em]">
               Salvos
             </span>
           </>
@@ -65,8 +67,8 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
       <NavLink to="/conta" className={({ isActive }) => getLinkClasses(isActive)}>
         {({ isActive }) => (
           <>
-            <UserRound className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
-            <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
+            <UserRound className="h-[1.15rem] w-[1.15rem] stroke-[1.6]" fill={isActive ? 'currentColor' : 'none'} />
+            <span className="block max-w-full truncate font-label text-[0.6rem] font-medium tracking-[0.01em]">
               Conta
             </span>
           </>
@@ -77,8 +79,8 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({ className = '' }) =>
         <NavLink to="/admin" className={({ isActive }) => getLinkClasses(isActive)}>
           {({ isActive }) => (
             <>
-              <Shield className="h-[1.35rem] w-[1.35rem] stroke-[1.5]" fill={isActive ? 'currentColor' : 'none'} />
-              <span className="mt-1 block max-w-full truncate font-label text-[0.6rem] uppercase tracking-[0.08rem] sm:text-[0.6875rem]">
+              <Shield className="h-[1.15rem] w-[1.15rem] stroke-[1.6]" fill={isActive ? 'currentColor' : 'none'} />
+              <span className="block max-w-full truncate font-label text-[0.6rem] font-medium tracking-[0.01em]">
                 Admin
               </span>
             </>

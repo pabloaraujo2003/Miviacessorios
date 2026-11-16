@@ -51,10 +51,10 @@ export const MobileCategorySheet: React.FC<MobileCategorySheetProps> = ({
         aria-haspopup="dialog"
         aria-hidden={!isVisible}
         tabIndex={isVisible ? 0 : -1}
-        className={`fixed left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full px-5 py-3 font-label text-[0.65rem] uppercase tracking-[0.18em] shadow-[0_10px_30px_rgba(12,12,12,0.25)] transition-[opacity,transform] duration-300 active:scale-95 ${
+        className={`fixed left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-[999px] px-4 py-2.5 font-label text-[0.65rem] uppercase tracking-[0.18em] shadow-[0_10px_30px_rgba(12,12,12,0.25)] transition-[opacity,transform] duration-300 active:scale-95 ${
           isFiltered ? 'bg-[#0c0c0c] text-white' : 'bg-surface-container-lowest text-on-surface border hairline'
         } ${isVisible ? 'opacity-100' : 'pointer-events-none translate-y-4 opacity-0'}`}
-        style={{ bottom: 'calc(5.75rem + env(safe-area-inset-bottom))' }}
+        style={{ bottom: 'calc(4.5rem + env(safe-area-inset-bottom))' }}
       >
         <SlidersHorizontal className="h-4 w-4 stroke-[1.5]" />
         Filtrar
